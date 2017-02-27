@@ -1,10 +1,18 @@
 # Room Booker Alexa Skill
 
-This is an in-progress skill built for Amazon's Alexa service that allows you to book rooms. Currently it handles very simple phrases like:
+This is an in-progress skill built for Amazon's Alexa service that allows you to book rooms. Currently it handles simple phrases like:
 
-> Alexa, Open Room Booker
+> Alexa, ask Room Booker to book me a room
 
-> Alexa, Book me a room
+or:
+
+> Alexa, open Room Booker
+
+followed by:
+
+> Book me a room
+
+It also has in-built help, repeat, and cancel functions.
 
 It currently lacks any interaction with the Microsoft Graph API, just using place-holder text, and assuming a room is free. This implementation uses the [Alexa Skills Kit SDK for Node.js](https://github.com/alexa/alexa-skills-kit-sdk-for-nodejs).
 
