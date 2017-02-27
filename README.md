@@ -23,7 +23,7 @@ Once you've set up your skill, take note of the *App ID* at the top left. You'll
 
 ## Hosting the Skill
 
-The skill is built to be hosted on Amazon Web Services' [Lambda](https://aws.amazon.com/lambda/).. First, from the Lambda console, make sure your region is set to EU Ireland (eu-west-1) as this is the only supported region for Alexa Skill Kit. Then create a Lambda function (using any of the 'alexa-skills-kit- blueprints) and choose Node.js as the runtime. On triggers, make sure Alexa Skills Kit appears as the only trigger. After you've created your Lambda function, look at the top right of the page to get your **Lambda ARN number** and put that in the Alexa Skill Information Endpoint field.
+The skill is built to be hosted on Amazon Web Services' [Lambda](https://aws.amazon.com/lambda/).. First, from the Lambda console, make sure your region is set to EU Ireland (eu-west-1) as this is the only supported region for Alexa Skill Kit. Then create a Lambda function (using any of the 'alexa-skills-kit- blueprints) and choose Node.js as the runtime. On triggers, make sure Alexa Skills Kit appears as the only trigger. After you've created your Lambda function, look at the top right of the page to get your **Lambda ARN** and put that in the Alexa Skill Information Endpoint field.
 
 To deploy to Lambda, just upload or copy-paste index.js to your Lambda function, making sure you have the right APP_ID. This will eventually change as authorization (and thus several more files) are added, at which point all the files will be made into a Node package, and will be uploaded by a .zip file.
 
