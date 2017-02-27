@@ -95,6 +95,10 @@ const confirmModeHandlers = Alexa.CreateStateHandler(states.CONFIRMMODE, {
   'BookIntent': function() {
     this.emit(':tell', this.t('ROOM_BOOKED', this.t('WHICH_ROOM')));
   },
+  'AMAZON.StartOverIntent':function() {
+    this.handler.state='';
+    this.emitWithState('LaunchRequest');
+  },
   //Only called when an unhandled intent is sent, which should never happen in the code at present, as there is only one custom intent, so that's effectively always used.
   'Unhandled': function() {
     this.attributes.speechOutput = this.t('BOOKING_UNHANDLED_MESSAGE');
@@ -117,7 +121,7 @@ const languageStrings = {
       UNHANDLED_REPROMPT: "I can book meeting rooms for you. Why don't you book a room?",
       ROOM_AVAILABLE_MESSAGE: "Room %s is available. Would you like me to book it for you?",
       ROOM_AVAILABLE_REPROMPT: "Would you like me to book room %s for you?",
-      ROOM_UNAVAIABLE_MESSAGE: "Sorry, no rooms are available right now. Maybe try again later!",
+      ROOM_UNAVAILABLE_MESSAGE: "Sorry, no rooms are available right now. Maybe try again later!",
       WHICH_ROOM: "1.4",
       ROOM_BOOKED: "Great. I have booked room %s for you.",
       BOOKING_HELP_MESSAGE: "I checked the rooms, and room %s is available. Say yes if you'd like to book it.",
@@ -138,7 +142,7 @@ const languageStrings = {
       UNHANDLED_REPROMPT: "I can book meeting rooms for you. Why don't you book a room?",
       ROOM_AVAILABLE_MESSAGE: "Room %s is available. Would you like me to book it for you?",
       ROOM_AVAILABLE_REPROMPT: "Would you like me to book room %s for you?",
-      ROOM_UNAVAIABLE_MESSAGE: "Sorry, no rooms are available right now. Maybe try again later!",
+      ROOM_UNAVAILABLE_MESSAGE: "Sorry, no rooms are available right now. Maybe try again later!",
       WHICH_ROOM: "1.4",
       ROOM_BOOKED: "Great. I have booked room %s for you.",
       BOOKING_HELP_MESSAGE: "I checked the rooms, and room %s is available. Say yes if you'd like to book it.",
