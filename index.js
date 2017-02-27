@@ -81,6 +81,9 @@ const bookModeHandlers = Alexa.CreateStateHandler(states.BOOKMODE, {
     this.emitWithState('SessionEndedRequest');
   },
   'AMAZON.YesIntent': function() {
+    this.emitWithState('BookIntent');
+  },
+  'BookIntent': function() {
     this.emit(':tell', this.t('ROOM_BOOKED', this.t('WHICH_ROOM')));
   },
   //Only called when an unhandled intent is sent, which should basically never happen in the code at present.
@@ -143,6 +146,6 @@ exports.handler = (event, context) => {
   const alexa = Alexa.handler(event, context);
   alexa.APP_ID = APP_ID; //App ID of Alexa skill, found on skill's page.
   alexa.resources = languageStrings;
-  alexa.registerHandlers(sessionHandlers, startModeHandlers, bookModeHandlers);
+  alexa.registerHandlers(sessionHandlers, bookModeHandlers);
   alexa.execute();
 };
