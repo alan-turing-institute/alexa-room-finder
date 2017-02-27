@@ -3,30 +3,33 @@
 'use strict';
 
 const Alexa = require('alexa-sdk')
-const APP_ID = 'amzn1.ask.skill.9ed5a39f-9d07-4e65-91ce-d16d59cbca0c'; //App ID of Alexa skill, found on Alexa skill page.
+
+//App ID of Alexa skill, found on Alexa Skill Page. Replace this if you're using this independently.
+const APP_ID = 'amzn1.ask.skill.9ed5a39f-9d07-4e65-91ce-d16d59cbca0c';
 
 const states = {
-  BOOKMODE: '_BOOKMODE' // initiated by BookIntent, when user agrees to book.
+  CONFIRMMODE: '_CONFIRMMODE' // Initiated by BookIntent, when user asks to book, and room is found.
 };
 
 //The set of handlers used for the overall session, but mostly to initiate a new session.
 const sessionHandlers = {
-  //This is called when Room Booker is opened.
-  /*TODO: Consider using LaunchRequest instead, and to work with the ask method of launching.
-  Issue: using LaunchRequest in the conventional way suggested by the SDK leads to crashes on tests.*/
+  //Called when Room Booker is opened without being asked to book a room.
   'LaunchRequest': function() {
     this.attributes.speechOutput = this.t('WELCOME_MESSAGE');
     this.attributes.repromptSpeech = this.t('WELCOME_REPROMPT', this.t('SKILL_NAME'));
     this.emit(':ask', this.attributes.speechOutput, this.attributes.repromptSpeech);
   },
+  //Gives a help message
   'AMAZON.HelpIntent': function () {
     this.attributes.speechOutput = this.t('HELP_MESSAGE');
     this.attributes.repromptSpeech = this.t('HELP_REPROMPT');
     this.emit(':ask', this.attributes.speechOutput, this.attributes.repromptSpeech);
   },
+  //Repeats last messages
   'AMAZON.RepeatIntent': function () {
     this.emit(':ask', this.attributes.speechOutput, this.attributes.repromptSpeech);
   },
+  //Stop, cancel, and no, all end session. Can be individually edited for more complex conversations.
   'AMAZON.StopIntent': function () {
     this.emit('SessionEndedRequest');
   },
@@ -36,38 +39,42 @@ const sessionHandlers = {
   'AMAZON.NoIntent': function() {
     this.emit('SessionEndedRequest');
   },
+  //Yes calls booking function.
   'AMAZON.YesIntent': function() {
     this.emit('BookIntent');
   },
-  //Does the key booking function. This could work from a LaunchRequest in future versions - i.e. "ask Room Booker to book a room"
+  //Does the key booking function. This is intended to work from a LaunchRequest - i.e. "Ask room booker to book me a room."
   'BookIntent': function() {
-    this.handler.state = states.BOOKMODE;
+    this.handler.state = states.CONFIRMMODE;
     this.attributes.speechOutput = this.t('ROOM_AVAILABLE_MESSAGE', this.t('WHICH_ROOM'));
     this.attributes.repromptSpeech = this.t('ROOM_AVAILABLE_REPROMPT', this.t('WHICH_ROOM'));
     this.emit(':ask', this.attributes.speechOutput, this.attributes.repromptSpeech);
   },
-  //Only called when an unhandled intent is sent, which should basically never happen in the code at present, as there is only one custom intent, so that's basically always used.
+  //Only called when an unhandled intent is sent, which should never happen in the code at present, as there is only one custom intent, so that's effectively always used.
   'Unhandled': function() {
     this.attributes.speechOutput = this.t('UNHANDLED_MESSAGE');
     this.attributes.repromptSpeech = this.t('UNHANDLED_REPROMPT');
     this.emit(':ask', this.attributes.speechOutput, this.attributes.repromptSpeech);
   },
-  //Called from all state handlers when the session ends without a booking being made. Also called in general session ed.
+  //Called from all state handlers when the session ends without a booking being made. Also called in general session.
   'SessionEndedRequest': function () {
     this.emit(':tell', this.t('STOP_MESSAGE'));
   },
 };
 
 //Set of handlers used after you've confirmed you want to book a room.
-const bookModeHandlers = Alexa.CreateStateHandler(states.BOOKMODE, {
+const confirmModeHandlers = Alexa.CreateStateHandler(states.CONFIRMMODE, {
+  //Gives a different help message
   'AMAZON.HelpIntent': function () {
     this.attributes.speechOutput = this.t('BOOKING_HELP_MESSAGE', this.t('WHICH_ROOM'));
     this.attributes.repromptSpeech = this.t('BOOKING_HELP_REPROMPT', this.t('WHICH_ROOM'));
     this.emit(':ask', this.attributes.speechOutput, this.attributes.repromptSpeech);
   },
+  //Repeats last messages
   'AMAZON.RepeatIntent': function () {
     this.emit(':ask', this.attributes.speechOutput, this.attributes.repromptSpeech);
   },
+  //Stop, cancel, and no, all end session. Can be individually edited for more complex conversations.
   'AMAZON.StopIntent': function () {
     this.handler.state='';
     this.emitWithState('SessionEndedRequest');
@@ -80,13 +87,15 @@ const bookModeHandlers = Alexa.CreateStateHandler(states.BOOKMODE, {
     this.handler.state='';
     this.emitWithState('SessionEndedRequest');
   },
+  //Yes calls booking finalisation function
   'AMAZON.YesIntent': function() {
     this.emitWithState('BookIntent');
   },
+  //BookIntent is here used to finalise a booking
   'BookIntent': function() {
     this.emit(':tell', this.t('ROOM_BOOKED', this.t('WHICH_ROOM')));
   },
-  //Only called when an unhandled intent is sent, which should basically never happen in the code at present.
+  //Only called when an unhandled intent is sent, which should never happen in the code at present, as there is only one custom intent, so that's effectively always used.
   'Unhandled': function() {
     this.attributes.speechOutput = this.t('BOOKING_UNHANDLED_MESSAGE');
     this.attributes.repromptSpeech = this.t('BOOKING_UNHANDLED_REPROMPT');
@@ -94,7 +103,7 @@ const bookModeHandlers = Alexa.CreateStateHandler(states.BOOKMODE, {
   }
 });
 
-//All strings used are below. Only 'en-GB' is required.
+//All strings used are below. Here, only 'en-GB' should be required.
 //It will break if used in America without en-US, so it's sensible to include.
 const languageStrings = {
   'en-GB': {
@@ -146,6 +155,6 @@ exports.handler = (event, context) => {
   const alexa = Alexa.handler(event, context);
   alexa.APP_ID = APP_ID; //App ID of Alexa skill, found on skill's page.
   alexa.resources = languageStrings;
-  alexa.registerHandlers(sessionHandlers, bookModeHandlers);
+  alexa.registerHandlers(sessionHandlers, confirmModeHandlers);
   alexa.execute();
 };
