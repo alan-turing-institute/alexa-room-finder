@@ -6,7 +6,6 @@ const Alexa = require('alexa-sdk')
 const APP_ID = 'amzn1.ask.skill.9ed5a39f-9d07-4e65-91ce-d16d59cbca0c'; //App ID of Alexa skill, found on Alexa skill page.
 
 const states = {
-  STARTMODE: '_STARTMODE',  // initiated by NewSession intent, when application starts.
   BOOKMODE: '_BOOKMODE' // initiated by BookIntent, when user agrees to book.
 };
 
@@ -15,20 +14,11 @@ const sessionHandlers = {
   //This is called when Room Booker is opened.
   /*TODO: Consider using LaunchRequest instead, and to work with the ask method of launching.
   Issue: using LaunchRequest in the conventional way suggested by the SDK leads to crashes on tests.*/
-  'NewSession': function() {
-    this.handler.state = states.STARTMODE;
+  'LaunchRequest': function() {
     this.attributes.speechOutput = this.t('WELCOME_MESSAGE');
     this.attributes.repromptSpeech = this.t('WELCOME_REPROMPT', this.t('SKILL_NAME'));
     this.emit(':ask', this.attributes.speechOutput, this.attributes.repromptSpeech);
   },
-  //Called from all state handlers when the session ends without a booking being made. Also called in general session ed.
-  'SessionEndedRequest': function () {
-    this.emit(':tell', this.t('STOP_MESSAGE'));
-  },
-};
-
-//Set of handlers used after app has been opened and initiated.
-const startModeHandlers = Alexa.CreateStateHandler(states.STARTMODE, {
   'AMAZON.HelpIntent': function () {
     this.attributes.speechOutput = this.t('HELP_MESSAGE');
     this.attributes.repromptSpeech = this.t('HELP_REPROMPT');
@@ -38,19 +28,16 @@ const startModeHandlers = Alexa.CreateStateHandler(states.STARTMODE, {
     this.emit(':ask', this.attributes.speechOutput, this.attributes.repromptSpeech);
   },
   'AMAZON.StopIntent': function () {
-    this.handler.state='';
-    this.emitWithState('SessionEndedRequest');
+    this.emit('SessionEndedRequest');
   },
   'AMAZON.CancelIntent': function () {
-    this.handler.state='';
-    this.emitWithState('SessionEndedRequest');
+    this.emit('SessionEndedRequest');
   },
   'AMAZON.NoIntent': function() {
-    this.handler.state='';
-    this.emitWithState('SessionEndedRequest');
+    this.emit('SessionEndedRequest');
   },
   'AMAZON.YesIntent': function() {
-    this.emitWithState('BookIntent');
+    this.emit('BookIntent');
   },
   //Does the key booking function. This could work from a LaunchRequest in future versions - i.e. "ask Room Booker to book a room"
   'BookIntent': function() {
@@ -64,8 +51,12 @@ const startModeHandlers = Alexa.CreateStateHandler(states.STARTMODE, {
     this.attributes.speechOutput = this.t('UNHANDLED_MESSAGE');
     this.attributes.repromptSpeech = this.t('UNHANDLED_REPROMPT');
     this.emit(':ask', this.attributes.speechOutput, this.attributes.repromptSpeech);
-  }
-});
+  },
+  //Called from all state handlers when the session ends without a booking being made. Also called in general session ed.
+  'SessionEndedRequest': function () {
+    this.emit(':tell', this.t('STOP_MESSAGE'));
+  },
+};
 
 //Set of handlers used after you've confirmed you want to book a room.
 const bookModeHandlers = Alexa.CreateStateHandler(states.BOOKMODE, {
