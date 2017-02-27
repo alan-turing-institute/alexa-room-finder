@@ -101,7 +101,7 @@ const bookModeHandlers = Alexa.CreateStateHandler(states.BOOKMODE, {
 });
 
 //All strings used are below. Only 'en-GB' is required.
-//It will break if used in America without en-US, so I sensible to include.
+//It will break if used in America without en-US, so it's sensible to include.
 const languageStrings = {
   'en-GB': {
     translation: {
