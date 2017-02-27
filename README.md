@@ -3,6 +3,7 @@
 This is an in-progress skill built for Amazon's Alexa service that allows you to book rooms. Currently it handles very simple phrases like:
 
 > Alexa, Open Room Booker
+
 > Alexa, Book me a room
 
 It currently lacks any interaction with the Microsoft Graph API, just using place-holder text, and assuming a room is free. This implementation uses the [Alexa Skills Kit SDK for Node.js](https://github.com/alexa/alexa-skills-kit-sdk-for-nodejs).
@@ -14,7 +15,7 @@ To set up the skill, go to the [Alexa skills kit development console](https://de
 * In the skill information section, fill in the basic skill information as you wish (using English (UK) as the language, assuming you're based in Europe.)
 * In the interaction model section: in the IntentSchema field, copy and paste the contents of the `interaction_model/intentSchema.json` file. Then in the Sample Utterances field, copy and paste the contents of
 `interaction_model/sample_utterances_en_GB.txt`.
-* In the configuration section, fill in your **Lambda ARN** as your endpoint. You'll get in the *Hosting the Skill* section. 
+* In the configuration section, fill in your **Lambda ARN** as your endpoint. You'll get in the *Hosting the Skill* section.
 
 When these steps are done, the skill should appear in your Amazon Alexa app (provided you're logged in with the same account as you develop on), and will automatically load onto your Amazon Echo. In a local use case (like here at the Turing) there is no need to publish.
 
@@ -28,9 +29,9 @@ To deploy to Lambda, just upload or copy-paste index.js to your Lambda function,
 
 ## Testing The Skill Locally
 
-You can use [lambda-local](https://www.npmjs.com/package/lambda-local) to test the main Lambda function locally. In the `test` directory is an editable Javascript files you can use for this, which should be easily customizable to any intent. To test an intent, simply run this file from the console.
+You can use [lambda-local](https://www.npmjs.com/package/lambda-local) to test the main Lambda function locally. `test/lambda-local-test.js` is an editable Javascript file you can use for this, which should be easily customizable to any intent. To test an intent, simply run this file from the console.
 
-If you install lambda-local globally, you can also test from the console using this command: `lambda-local -l index.js -h handler -e filename` where filename is the JSON request you want to test. When the program is approaching a final state, I will compile all possible JSON requests to facilitate this.
+If you install lambda-local globally, you can also test from the console using this command: `lambda-local -l index.js -h handler -e filename` where filename is the JSON request you want to test. When the program is approaching a final state, I will compile all possible JSON requests in the `test` directory to facilitate this.
 
 ## Testing the skill online
 
