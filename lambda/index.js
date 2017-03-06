@@ -1,4 +1,8 @@
-/*Main handling code, to be uploaded to AWS Lambda*/
+/**
+ * @file Main Alexa Skill handling code. Ensure handler is index.handler (which is default)
+ * in order to call this.
+ * @summary Handles Alexa skill.
+ */ 
 
 'use strict';
 
@@ -9,7 +13,7 @@ const requesters = require('./requesters')
 const APP_ID = undefined;
 
 const states = {
-  CONFIRMMODE: '_CONFIRMMODE' // Initiated by BookIntent, when user asks to book, and room is found.
+  CONFIRMMODE: '_CONFIRMMODE' // Initiated by BookIntent, when user asks to book, and an available room is found.
 };
 
 //The set of handlers used for the overall session, but mostly to initiate a new session.
@@ -40,7 +44,7 @@ const sessionHandlers = {
   'AMAZON.NoIntent': function() {
     this.emit('SessionEndedRequest');
   },
-  //Yes calls booking function.
+  //Yes calls booking function
   'AMAZON.YesIntent': function() {
     this.emit('BookIntent');
   },
@@ -109,7 +113,7 @@ const confirmModeHandlers = Alexa.CreateStateHandler(states.CONFIRMMODE, {
 
     var that = this;
 
-    var startTime = new Date(); //TODO Fix this so it uses the same start and end time as the previous one.
+    var startTime = new Date(); //TODO Edit this so it uses the exact same start and end time as the previous one. Otherwise we risk bugs on request.
     var endTime = new Date(startTime.getTime() + 30 * 60000);
 
     requesters.postRoom(this.event.session.user.accessToken, startTime, endTime, function() {

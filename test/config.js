@@ -1,3 +1,3 @@
 module.exports = {
-  token: "{token}"
+  token: "{token}" //Replace {token} to the value of your access token
 }

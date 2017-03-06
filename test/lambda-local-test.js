@@ -1,10 +1,16 @@
-/*Example test of index.js, using the lambda-local package.
-If you have lambda-local installed globally a test can also be performed from the console.*/
+
+/**
+ * @file Tests the lambda code, using the lambda-local package. To be run with node from the terminal.
+ * You may need to install lambda-local, using 'npm install lambda-local'. If you do a global install (i.e. 'sudo npm install -g lambda-local') you can also test the lambda code using the console.
+ *
+ * NB: Config.js must first be edited to contain a token for this code to work. Otherwise it will return a JSON parsing error.
+ */
 
 const lambdaLocal = require('lambda-local');
-const config = require('./config')
 
-/*This is the JSON payload that would be sent when the user first agrees to book something, and an example of a normal IntentRequest.*/
+const config = require('./config') //config.js contains the token.
+
+//This is the JSON payload that would be sent when the user first agrees to book something, and an example of a normal IntentRequest.
 var jsonPayload = {
   "session": {
     "sessionId": "",
