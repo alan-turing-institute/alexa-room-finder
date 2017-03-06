@@ -1,0 +1,17 @@
+{
+  "name": "alexa-room-booker",
+  "version": "0.0.2",
+  "description": "Lets you book rooms at the Turing using Alexa",
+  "main": "index.js",
+  "dependencies": {
+    "alexa-sdk": "^1.0.7",
+    "lambda-local": "^1.4.1",
+    "request": "^2.80.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Tom Knowles",
+  "license": "ISC"
+}

@@ -1,6 +1,6 @@
 # Room Booker Alexa Skill
 
-This is an in-progress skill built for Amazon's Alexa service that allows you to book rooms. Currently it handles simple phrases like:
+This is an in-development skill built for Amazon's Alexa service, that allows you to book a room for half-an-hour. Currently it handles simple phrases like:
 
 > Alexa, ask Room Booker to book me a room
 
@@ -12,9 +12,9 @@ followed by:
 
 > Book me a room
 
-It also has in-built help, repeat, and cancel functions.
+It also has help, repeat, start-over and cancel functions.
 
-It currently lacks any interaction with the Microsoft Graph API, just using place-holder text, and assuming a room is free. This implementation uses the [Alexa Skills Kit SDK for Node.js](https://github.com/alexa/alexa-skills-kit-sdk-for-nodejs).
+In this dev version, instead of reading the meeting room calendars, and then creating an event in the correct one, it reads the personal calendar of whoever's account is linked to the Alexa Skill, checks if it's free for half-an-hour, then makes an event if it is free.
 
 ## Setting up the Alexa Skill
 
@@ -24,20 +24,21 @@ To set up the skill, go to the [Alexa skills kit development console](https://de
 * In the interaction model section: in the IntentSchema field, copy and paste the contents of the `interaction_model/intentSchema.json` file. Then in the Sample Utterances field, copy and paste the contents of
 `interaction_model/sample_utterances_en_GB.txt`.
 * In the configuration section, fill in your **Lambda ARN** as your endpoint. You'll get in the *Hosting the Skill* section.
+* You'll also need to set up Account Linking, so change that checkbox to yes. We're using the Microsoft V2 endpoint and Auth Code Grant for authorizing. This is proving a little bit of a pain-point, so I'll update the documentation here later.
 
 When these steps are done, the skill should appear in your Amazon Alexa app (provided you're logged in with the same account as you develop on), and will automatically load onto your Amazon Echo. In a local use case (like here at the Turing) there is no need to publish.
 
-Once you've set up your skill, take note of the *App ID* at the top left. You'll need to copy this into index.js at `const APP_ID = `.
+Once you've set up your skill, take note of the *App ID* at the top left. You'll need to copy this into index.js at `const APP_ID = undefined`.
 
 ## Hosting the Skill
 
-The skill is built to be hosted on Amazon Web Services' [Lambda](https://aws.amazon.com/lambda/).. First, from the Lambda console, make sure your region is set to EU Ireland (eu-west-1) as this is the only supported region for Alexa Skill Kit. Then create a Lambda function (using any of the 'alexa-skills-kit- blueprints) and choose Node.js as the runtime. On triggers, make sure Alexa Skills Kit appears as the only trigger. After you've created your Lambda function, look at the top right of the page to get your **Lambda ARN** and put that in the Alexa Skill Information Endpoint field.
+The skill is built to be hosted on Amazon Web Services' [Lambda](https://aws.amazon.com/lambda/).. First, from the Lambda console, make sure your region is set to EU Ireland (eu-west-1) as this is the only supported region for Alexa Skill Kit. Then create a Lambda function (using any of the 'alexa-skills-kit- blueprints, or just a blank function) and choose Node.JS as the runtime. On triggers, make sure Alexa Skills Kit appears as the only trigger. After you've created your Lambda function, look at the top right of the page to get your **Lambda ARN** and put that in the Alexa Skill Information Endpoint field.
 
-To deploy to Lambda, just upload or copy-paste index.js to your Lambda function, making sure you have the right APP_ID. This will eventually change as authorization (and thus several more files) are added, at which point all the files will be made into a Node package, and will be uploaded by a .zip file.
+To deploy to Lambda, first make sure you have the right APP_ID in index.js, then follow the instructions [here](http://docs.aws.amazon.com/lambda/latest/dg/nodejs-create-deployment-pkg.html), using the 'lambda' folder.  Then you can upload it straight to the Lambda function. As this step is a bit complex, especially mid-development, I'm looking to automate it with an [AWS CodePipeline](http://docs.aws.amazon.com/codepipeline/latest/userguide/welcome.html) from this repo.
 
 ## Testing The Skill Locally
 
-You can use [lambda-local](https://www.npmjs.com/package/lambda-local) to test the main Lambda function locally. `test/lambda-local-test.js` is an editable Javascript file you can use for this, which should be easily customizable to any intent. To test an intent, simply run this file from the console.
+You can use [lambda-local](https://www.npmjs.com/package/lambda-local) to test the main Lambda function locally. `test/lambda-local-test.js` is an editable Javascript file you can use for this (though you have to move it to the `lambda/`  directory). To test an intent, simply run this file from the console: `node lambda-local-test.js` 
 
 If you install lambda-local globally, you can also test from the console using this command: `lambda-local -l index.js -h handler -e filename` where filename is the JSON request you want to test. When the program is approaching a final state, I will compile all possible JSON requests in the `test` directory to facilitate this.
 
