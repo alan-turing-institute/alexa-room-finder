@@ -8,7 +8,7 @@ module.exports = {
     },
     "attributes": {
       "speechOutput": "Would you like to book a room for half an hour?", //Change this to change the *last* message used.
-      "STATE": "", //Change this to change the current state. - Options: "_CONFIRMMODE" or "" (blank).
+      "STATE": "_CONFIRMMODE", //Change this to change the current state. - Options: "_CONFIRMMODE" or "" (blank).
       "repromptSpeech": "I'm %s. My job is to book you a room! For further instructions, please ask for help." //Change this to change the *last* reprompt used.
     },
     "user": {
