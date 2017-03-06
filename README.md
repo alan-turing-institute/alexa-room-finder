@@ -14,7 +14,7 @@ followed by:
 
 It also has help, repeat, start-over and cancel functions.
 
-In this dev version, instead of reading the meeting room calendars, and then creating an event in the correct one, it reads the personal calendar of whoever's account is linked to the Alexa Skill, checks if it's free for half-an-hour, then makes an event if it is free.
+In this in-development version, instead of reading the meeting room calendars, and then creating an event in the correct one, it reads the personal calendar of whoever's account is linked to the Alexa Skill, checks if it's free for half-an-hour, then makes an event if it is free.
 
 ## Setting up the Alexa Skill
 
@@ -36,12 +36,14 @@ The skill is built to be hosted on Amazon Web Services' [Lambda](https://aws.ama
 
 To deploy to Lambda, first make sure you have the right APP_ID in index.js, then follow the instructions [here](http://docs.aws.amazon.com/lambda/latest/dg/nodejs-create-deployment-pkg.html), using the 'lambda' folder.  Then you can upload it straight to the Lambda function. As this step is a bit complex, especially mid-development, I'm looking to automate it with an [AWS CodePipeline](http://docs.aws.amazon.com/codepipeline/latest/userguide/welcome.html) from this repo.
 
-## Testing The Skill Locally
+## Testing The Lambda Function Locally
 
-You can use [lambda-local](https://www.npmjs.com/package/lambda-local) to test the main Lambda function locally. `test/lambda-local-test.js` is an editable Javascript file you can use for this (though you have to move it to the `lambda/`  directory). To test an intent, simply run this file from the console: `node lambda-local-test.js` 
+In order to test, you'll first need a token to pass to the Lambda function. During development, I am using [Postman](https://www.getpostman.com/) to acquire tokens, and copying them in manually. You'll just need to edit file: `test/config.js`, replacing `{token}` with your actual token.
 
-If you install lambda-local globally, you can also test from the console using this command: `lambda-local -l index.js -h handler -e filename` where filename is the JSON request you want to test. When the program is approaching a final state, I will compile all possible JSON requests in the `test` directory to facilitate this.
+You can use [lambda-local](https://www.npmjs.com/package/lambda-local) to test the main Lambda function locally. `test/lambda-local-test.js` is an customisable Javascript file you can use for this. To test, simply use Node to run this file from the console: `node test/lambda-local-test.js`
+
+If you install lambda-local globally, you can also test from the console using this command: `lambda-local -l lambda/index.js -h handler -e test/filename.js` where filename is the JSON request you want to test. I've created test JSONs for most of the available intents. The most important intent to test is the BookIntent in both the BLANK and \_CONFIRMMODE state, as that is the only intent that directly accesses the Office API.
 
 ## Testing the skill online
 
-To test the skill online, go to the Test Section in the Alexa Skill Console for the Room Booker Skill. This should allow you to test without using the Amazon Echo device itself.
+To test the skill online, go to the Test Section in the Alexa Skill Console for the Room Booker Skill. This should allow you to test without using the Amazon Echo device itself. This currently can't be done due to faulty account linking, so further information will be included when account linking works. 

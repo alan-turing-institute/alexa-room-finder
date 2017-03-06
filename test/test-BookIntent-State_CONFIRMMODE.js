@@ -1,11 +1,6 @@
-/*Example test of index.js, using the lambda-local package.
-If you have lambda-local installed globally a test can also be performed from the console.*/
-
-const lambdaLocal = require('lambda-local');
 const config = require('./config')
 
-/*This is the JSON payload that would be sent when the user first agrees to book something, and an example of a normal IntentRequest.*/
-var jsonPayload = {
+module.exports = {
   "session": {
     "sessionId": "",
     "application": {
@@ -34,18 +29,3 @@ var jsonPayload = {
   },
   "version": "1.0"
 }
-
-//Main
-lambdaLocal.execute({
-    event: jsonPayload,
-    lambdaPath: '../lambda/index.js',
-    profileName: 'default',
-    timeoutMs: 3000,
-    callback: function(err, data) {
-        if (err) {
-            console.log(err);
-        } else {
-            console.log(data);
-        }
-    }
-});
