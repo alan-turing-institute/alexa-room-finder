@@ -3,6 +3,7 @@
 'use strict';
 
 const Alexa = require('alexa-sdk')
+var requesters = require('./requesters')
 
 //App ID of Alexa skill, found on Alexa Skill Page. Replace this if you're using this independently.
 const APP_ID = 'amzn1.ask.skill.9ed5a39f-9d07-4e65-91ce-d16d59cbca0c';
@@ -45,10 +46,22 @@ const sessionHandlers = {
   },
   //Does the key booking function. This is intended to work from a LaunchRequest - i.e. "Ask room booker to book me a room."
   'BookIntent': function() {
-    this.handler.state = states.CONFIRMMODE;
-    this.attributes.speechOutput = this.t('ROOM_AVAILABLE_MESSAGE', this.t('WHICH_ROOM'));
-    this.attributes.repromptSpeech = this.t('ROOM_AVAILABLE_REPROMPT', this.t('WHICH_ROOM'));
-    this.emit(':ask', this.attributes.speechOutput, this.attributes.repromptSpeech);
+
+    var that = this;
+
+    var startTime = new Date();
+    var endTime = new Date(startTime.getTime() + 30 * 60000);
+
+    requesters.checkRoom(this.event.session.user.accessToken, startTime, endTime, function() {
+      that.handler.state = states.CONFIRMMODE;
+      that.attributes.speechOutput = that.t('ROOM_AVAILABLE_MESSAGE', that.t('WHICH_ROOM'));
+      that.attributes.repromptSpeech = that.t('ROOM_AVAILABLE_REPROMPT', that.t('WHICH_ROOM'));
+      that.emit(':ask', that.attributes.speechOutput, that.attributes.repromptSpeech);
+    }, function() {
+      that.emit(':tell', that.t('ROOM_UNAVAILABLE_MESSAGE'));
+    }, function(error) {
+      that.emit(':tell', "An error occurred" + error);
+    });
   },
   //Only called when an unhandled intent is sent, which should never happen in the code at present, as there is only one custom intent, so that's effectively always used.
   'Unhandled': function() {
@@ -93,7 +106,18 @@ const confirmModeHandlers = Alexa.CreateStateHandler(states.CONFIRMMODE, {
   },
   //BookIntent is here used to finalise a booking
   'BookIntent': function() {
-    this.emit(':tell', this.t('ROOM_BOOKED', this.t('WHICH_ROOM')));
+
+    var that = this;
+
+    var startTime = new Date(); //TODO Fix this so it uses the same start and end time as the previous one.
+    var endTime = new Date(startTime.getTime() + 30 * 60000);
+
+    requesters.postRoom(this.event.session.user.accessToken, startTime, endTime, function() {
+      that.emit(':tell', that.t('ROOM_BOOKED', that.t('WHICH_ROOM')));
+    }, function(error) {
+      that.emit(':tell', "An error occurred: " + error);
+    });
+
   },
   'AMAZON.StartOverIntent':function() {
     this.handler.state='';
@@ -122,7 +146,7 @@ const languageStrings = {
       ROOM_AVAILABLE_MESSAGE: "Room %s is available. Would you like me to book it for you?",
       ROOM_AVAILABLE_REPROMPT: "Would you like me to book room %s for you?",
       ROOM_UNAVAILABLE_MESSAGE: "Sorry, no rooms are available right now. Maybe try again later!",
-      WHICH_ROOM: "1.4",
+      WHICH_ROOM: "Tom",
       ROOM_BOOKED: "Great. I have booked room %s for you.",
       BOOKING_HELP_MESSAGE: "I checked the rooms, and room %s is available. Say yes if you'd like to book it.",
       BOOKING_HELP_REPROMPT: "Say yes if you want to book room %s, or no if you don't.",
@@ -143,7 +167,7 @@ const languageStrings = {
       ROOM_AVAILABLE_MESSAGE: "Room %s is available. Would you like me to book it for you?",
       ROOM_AVAILABLE_REPROMPT: "Would you like me to book room %s for you?",
       ROOM_UNAVAILABLE_MESSAGE: "Sorry, no rooms are available right now. Maybe try again later!",
-      WHICH_ROOM: "1.4",
+      WHICH_ROOM: "Tom",
       ROOM_BOOKED: "Great. I have booked room %s for you.",
       BOOKING_HELP_MESSAGE: "I checked the rooms, and room %s is available. Say yes if you'd like to book it.",
       BOOKING_HELP_REPROMPT: "Say yes if you want to book room %s, or no if you don't.",
