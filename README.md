@@ -30,7 +30,7 @@ To set up the actual skill itself, go to the [Alexa skills kit development conso
 
 Here is the goal security model:
 
-![Security Model](image goes here)
+![Security Model](https://cloud.githubusercontent.com/assets/20475469/23750447/f24f1e98-04c4-11e7-8201-58352c29ddb9.png)
 
 In order to set up the account linking part of this, I'd suggest opening the [Microsoft App Dev Portal](https://apps.dev.microsoft.com/#/appList) and the Alexa Skill Configuration Page at the same time, as it requires some copy-pasting between the two.
 
