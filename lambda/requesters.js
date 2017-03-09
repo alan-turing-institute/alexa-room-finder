@@ -23,7 +23,7 @@ var requesters = {} //Requesters object to export - required by index.js
  */
 
 requesters.checkRoom = function(token, startTime, endTime, trueCallback, falseCallback, errorCallback) {
-  var url = 'https://outlook.office.com/api/v2.0/me/calendarview?startDateTime=' + startTime.toISOString() + '&endDateTime=' + endTime.toISOString(); //Using Office REST API v2.0 Endpoint
+  var url = 'https://graph.microsoft.com/v1.0/me/calendarview?startDateTime=' + startTime.toISOString() + '&endDateTime=' + endTime.toISOString(); //Using Office REST API v2.0 Endpoint
 
   request.get({
     url: url,
@@ -85,7 +85,7 @@ requesters.postRoom = function(token, startTime, endTime, successCallback, error
   }
 
   request.post({
-    url: 'https://outlook.office.com/api/v2.0/me/events', //Using Office REST API v2.0 Endpoint
+    url: 'https://graph.microsoft.com/v1.0/me/events', //Using Office REST API v2.0 Endpoint
     headers: {
       'content-type': 'application/json',
       authorization: 'Bearer ' + token,

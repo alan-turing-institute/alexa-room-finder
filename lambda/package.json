@@ -1,7 +1,7 @@
 {
-  "name": "alexa-room-booker",
+  "name": "room-booker-skill",
   "version": "0.0.2",
-  "description": "Lets you book rooms at the Turing using Alexa",
+  "description": "Books rooms at the Turing",
   "main": "index.js",
   "dependencies": {
     "alexa-sdk": "^1.0.7",

@@ -2,7 +2,7 @@
  * @file Main Alexa Skill handling code. Ensure handler is index.handler (which is default)
  * in order to call this.
  * @summary Handles Alexa skill.
- */ 
+ */
 
 'use strict';
 
@@ -10,7 +10,7 @@ const Alexa = require('alexa-sdk')
 const requesters = require('./requesters')
 
 //App ID of Alexa skill, found on Alexa Skill Page. Replace this if you're using this independently.
-const APP_ID = undefined;
+const APP_ID = 'amzn1.ask.skill.d5f0bc95-03dc-47ea-9c54-1a663036163f';
 
 const states = {
   CONFIRMMODE: '_CONFIRMMODE' // Initiated by BookIntent, when user asks to book, and an available room is found.
