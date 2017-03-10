@@ -82,7 +82,7 @@ const sessionHandlers = {
           that.attributes.speechOutput = that.t('ROOM_AVAILABLE_MESSAGE', that.attributes.roomName);
           that.attributes.repromptSpeech = that.t('ROOM_AVAILABLE_REPROMPT', that.attributes.roomName);
           that.emit(':ask', that.attributes.speechOutput, that.attributes.repromptSpeech);
-          
+
         }, function(roomError) {
           that.emit(':tell', that.t('ROOM_ERROR', roomError));
         });
@@ -106,8 +106,8 @@ const sessionHandlers = {
 const confirmModeHandlers = Alexa.CreateStateHandler(states.CONFIRMMODE, {
   //Gives a different help message
   'AMAZON.HelpIntent': function () {
-    this.attributes.speechOutput = this.t('BOOKING_HELP_MESSAGE', this.t('WHICH_ROOM'));
-    this.attributes.repromptSpeech = this.t('BOOKING_HELP_REPROMPT', this.t('WHICH_ROOM'));
+    this.attributes.speechOutput = this.t('BOOKING_HELP_MESSAGE', this.attributes.roomName);
+    this.attributes.repromptSpeech = this.t('BOOKING_HELP_REPROMPT', this.attributes.roomName);
     this.emit(':ask', this.attributes.speechOutput, this.attributes.repromptSpeech);
   },
   //Repeats last messages
@@ -170,7 +170,6 @@ const languageStrings = {
       ROOM_AVAILABLE_MESSAGE: "%s is available. Would you like me to book it for you?",
       ROOM_AVAILABLE_REPROMPT: "Would you like me to book %s for you?",
       ROOM_UNAVAILABLE_MESSAGE: "Sorry, no rooms are available right now. Maybe try again later!",
-      WHICH_ROOM: "Tom",
       ROOM_BOOKED: "Great. I have booked %s for you.",
       BOOKING_HELP_MESSAGE: "I checked the rooms, and %s is available. Say yes if you'd like to book it.",
       BOOKING_HELP_REPROMPT: "Say yes if you want to book %s, or no if you don't.",
@@ -194,7 +193,6 @@ const languageStrings = {
       ROOM_AVAILABLE_MESSAGE: "%s is available. Would you like me to book it for you?",
       ROOM_AVAILABLE_REPROMPT: "Would you like me to book %s for you?",
       ROOM_UNAVAILABLE_MESSAGE: "Sorry, no rooms are available right now. Maybe try again later!",
-      WHICH_ROOM: "Tom",
       ROOM_BOOKED: "Great. I have booked %s for you.",
       BOOKING_HELP_MESSAGE: "I checked the rooms, and %s is available. Say yes if you'd like to book it.",
       BOOKING_HELP_REPROMPT: "Say yes if you want to book %s, or no if you don't.",
