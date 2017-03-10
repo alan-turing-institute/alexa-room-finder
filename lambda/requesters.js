@@ -5,26 +5,25 @@
 
 'use strict';
 
-var request = require('request');
-var Q = require('q');
+var request = require('request'); //For http requests to REST API
+var Q = require('q'); //For promises
 
 var requesters = {} //Requesters object to export - 'require'd by index.js
 
 /**
  * requesters.postRoom - given a token and the owner of the room calendar, this books a new event on my calendar, inviting the room.
  *
- * @param  {string} token       The OAuth/JWT access token provided by the Alexa Skill
- * @param  {string} owner       Address of owner of calendar to be booked
- * @param  {string} startTime   ISO-formatted string with start time
- * @param  {string} endTime     ISO-formatted string with end time
- * @return {promise}
+ * @param  {string} token       The JWT access token provided by the Alexa Skill.
+ * @param  {string} owner       Address of owner of calendar to be booked.
+ * @param  {string} startTime   Start time of meeting to post, formatted as ISO-8601 string.
+ * @param  {string} endTime     End time of meeting to post, formatted as ISO-8601 string.
+ * @return {promise}            Promise resolved to the owner of calendar used. //TODO: This owner is not actually used by index.js, but was (and may be) useful for debug. Change before production.
  */
-
-
 requesters.postRoom = function(token, owner, startTime, endTime) {
 
   var deferred = Q.defer();
 
+  //Structure of event to be made
   var newEvent = {
     Subject: 'Test meeting event to be created',
     Start: {
@@ -47,11 +46,12 @@ requesters.postRoom = function(token, owner, startTime, endTime) {
       Type: 'Required',
       EmailAddress: {
         Address: owner,
-        Name: 'Alexa'
+        Name: 'Alexa' //TODO: I forgot to include the actual owner's name. This has to be updated.
       }
     } ]
   }
 
+  //Posts event
   request.post({
     url: 'https://graph.microsoft.com/v1.0/me/events',
     headers: {
@@ -73,21 +73,19 @@ requesters.postRoom = function(token, owner, startTime, endTime) {
   return deferred.promise;
 }
 
+
 /**
- * requesters.findFreeRoomByName - takes a set of names of calendars, and returns one free one. Performed asynchronously for speed.
+ * requesters.getCalendars - retrieves all of user's calendars from Office 365
  *
- * @param  {string} token       The OAuth/JWT access token to use in request
- * @param  {string} startTime   ISO String showing start time
- * @param  {string} endTime     ISO String showing end time
- * @param  {array} namesToFind  The set of names to check
- * @return {promise}            Promise containing name and owner in an object
+ * @param  {string} token The JWT access token provided by the Alexa Skill
+ * @return {promise}      Promise resolved to JSON containing all calendars.
  */
-requesters.findFreeRoomByName = function(token, startTime, endTime, namesToFind) {
+requesters.getCalendars = function(token) {
 
   var deferred = Q.defer();
 
   request.get({
-    url: 'https://graph.microsoft.com/beta/Users/Me/Calendars', //In order to obtain owner, the beta endpoint must be used. //TODO: When updated, change this endpoint.
+    url: 'https://graph.microsoft.com/beta/Users/Me/Calendars', //In order to obtain owner, which I'd like to use, the beta endpoint must be used. //TODO: When updated, change this endpoint.
     headers: {
       authorization: 'Bearer ' + token,
     },
@@ -99,28 +97,53 @@ requesters.findFreeRoomByName = function(token, startTime, endTime, namesToFind)
     } else if (parsedBody.error) {
       deferred.reject(parsedBody.error.message)
     } else {
-      parsedBody.value.forEach(function(calendar) {
-        if(~namesToFind.indexOf(calendar.name)) {
+      deferred.resolve(parsedBody.value);
+    }
+  });
+  return deferred.promise;
+}
 
-          var calViewUrl = 'https://graph.microsoft.com/v1.0/Users/Me/Calendars/' + calendar.id.toString() + '/calendarView?startDateTime=' + startTime + '&endDateTime=' + endTime;
 
-          request.get({
-            url: calViewUrl,
-            headers: {
-              authorization: 'Bearer ' + token,
-            },
-          }, function (err, response, body) {
-            var parsedBody = JSON.parse(body);
-            if (err) {
-              deferred.reject(err)
-            } else if (parsedBody.error) {
-              deferred.reject(parsedBody.error.message)
-            } else if (parsedBody.value == ''){
-              deferred.resolve({
-                "owner" : calendar.owner.address.toString(),
-                "name" : calendar.name
-              });
-            }
+
+/**
+ * requesters.findFreeRoom - finds a free room when given a set of calendars to use, a start time and an end time.
+ *
+ * @param  {string} token       The JWT access token provided by the Alexa Skill
+ * @param  {string} startTime   The start time of the period to check, formatted as an ISO 8601 string.
+ * @param  {string} endTime     The end time of the period to check, formatted as an ISO 8601 string.
+ * @param  {array} namesToFind  Array containing the names of all calendars to search for
+ * @param  {object} parsedCals  JSON containing all calendars returned by requesters.
+ * @return {promise}            Promise resolved to JSON object containing owner of calendar and name of calendar.
+ */
+requesters.findFreeRoom = function(token, startTime, endTime, namesToFind, parsedCals) {
+
+  var deferred = Q.defer();
+
+  /*For each calendar:
+   * - check if its name is in namesToFind.
+   * - if it is in namesToFind, check if it's free.
+   * - if it is free, return its owner and name in a JSON.
+   *
+   * TODO: Add some way for it to register no rooms on the list being free.*/
+  parsedCals.forEach(function(calendar) {
+    if(~namesToFind.indexOf(calendar.name)) {
+      var calViewUrl = 'https://graph.microsoft.com/v1.0/Users/Me/Calendars/' + calendar.id.toString() + '/calendarView?startDateTime=' + startTime + '&endDateTime=' + endTime;
+
+      request.get({
+        url: calViewUrl,
+        headers: {
+          authorization: 'Bearer ' + token,
+        },
+      }, function (err, response, body) {
+        var parsedBody = JSON.parse(body);
+        if (err) {
+          deferred.reject(err)
+        } else if (parsedBody.error) {
+          deferred.reject(parsedBody.error.message)
+        } else if (parsedBody.value == ''){
+          deferred.resolve({
+            "owner" : calendar.owner.address.toString(), //TODO: Add owner name, and rename owner address
+            "name" : calendar.name
           });
         }
       });

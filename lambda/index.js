@@ -12,9 +12,10 @@ const requesters = require('./requesters')
 //App ID of Alexa skill, found on Alexa Skill Page. Replace this if you're using this independently.
 const APP_ID = '{app-id}';
 
-//Names of calendars to be looked for.
+//Names of all calendars to be looked for as rooms.
 const testNames = ['{calendar-name-1}', '{calendar-name-2}'];
 
+//Object of all states to be used by the code.
 const states = {
   CONFIRMMODE: '_CONFIRMMODE' // Initiated by BookIntent, when user asks to book, and an available room is found.
 };
@@ -56,23 +57,39 @@ const sessionHandlers = {
 
     var that = this;
 
+    //Define start and end time of period to check
     var startTime = new Date();
     var endTime = new Date(startTime.getTime() + 30 * 60000);
 
+    //Save dates in attributes as ISO strings, so they can be accessed to post the event later.
     this.attributes.startTime = startTime.toISOString();
     this.attributes.endTime = endTime.toISOString();
 
-    requesters.findFreeRoomByName(this.event.session.user.accessToken, this.attributes.startTime, this.attributes.endTime, testNames).then(function(creds) {
-      that.handler.state = states.CONFIRMMODE;
-      that.attributes.roomOwner = creds.owner;
-      that.attributes.roomName = creds.name;
-      that.attributes.speechOutput = that.t('ROOM_AVAILABLE_MESSAGE', that.attributes.roomName);
-      that.attributes.repromptSpeech = that.t('ROOM_AVAILABLE_REPROMPT', that.attributes.roomName);
-      that.emit(':ask', that.attributes.speechOutput, that.attributes.repromptSpeech);
-    }, function(error) {
-      that.emit(':tell', "There was an error.");
-    });
-  },
+    //Retrieves all of the users calendars, with error callback spoken through Alexa.
+    requesters.getCalendars(that.event.session.user.accessToken)
+      .then(function(parsedCals) {
+        //Finds a free room from one of the calendars, with error callback spoken through Alexa.
+        requesters.findFreeRoom(that.event.session.user.accessToken, that.attributes.startTime, that.attributes.endTime, testNames, parsedCals)
+        .then(function(creds) {
+
+          //Changes state to confirm mode, as a free room has been found.
+          that.handler.state = states.CONFIRMMODE;
+
+          //Stores the owner of the room and room name as attributes, for later use when booking room.
+          that.attributes.roomOwner = creds.owner;
+          that.attributes.roomName = creds.name;
+
+          that.attributes.speechOutput = that.t('ROOM_AVAILABLE_MESSAGE', that.attributes.roomName);
+          that.attributes.repromptSpeech = that.t('ROOM_AVAILABLE_REPROMPT', that.attributes.roomName);
+          that.emit(':ask', that.attributes.speechOutput, that.attributes.repromptSpeech);
+          
+        }, function(roomError) {
+          that.emit(':tell', that.t('ROOM_ERROR', roomError));
+        });
+      }, function(calError) {
+        that.emit(':tell', that.t('CALENDAR_ERROR', calError));
+      });
+    },
   //Only called when an unhandled intent is sent, which should never happen in the code at present, as there is only one custom intent, so that's effectively always used.
   'Unhandled': function() {
     this.attributes.speechOutput = this.t('UNHANDLED_MESSAGE');
@@ -110,19 +127,20 @@ const confirmModeHandlers = Alexa.CreateStateHandler(states.CONFIRMMODE, {
     this.handler.state='';
     this.emitWithState('SessionEndedRequest');
   },
-  //Yes calls booking finalisation function
+  //'Yes' calls booking finalisation function
   'AMAZON.YesIntent': function() {
     this.emitWithState('BookIntent');
   },
-  //BookIntent is here used to finalise a booking
+  //BookIntent is used to finalise a booking.
   'BookIntent': function() {
 
     var that = this;
 
+    //Posts room, with error callback spoken through Alexa
     requesters.postRoom(this.event.session.user.accessToken, this.attributes.roomOwner, this.attributes.startTime, this.attributes.endTime).then(function(owner) {
       that.emit(':tell', that.t('ROOM_BOOKED', that.attributes.roomName));
-    }, function(error) {
-      that.emit(':tell', "There was an error.");
+    }, function(bookError) {
+      that.emit(':tell', that.t('BOOKING_ERROR', bookError));
     });
   },
   'AMAZON.StartOverIntent':function() {
@@ -158,6 +176,9 @@ const languageStrings = {
       BOOKING_HELP_REPROMPT: "Say yes if you want to book %s, or no if you don't.",
       BOOKING_UNHANDLED_MESSAGE: "Sorry, I didn't get that. Did you want that room?",
       BOOKING_UNHANDLED_REPROMPT: "Please confirm if you want that room I found. Bye!",
+      CALENDAR_ERROR: "There was an error retrieving calendars: %s",
+      ROOM_ERROR: "There was an error retrieving a free room: %s",
+      BOOKING_ERROR: "There was an error booking the room: %s",
       STOP_MESSAGE: "Alright. Goodbye!"
     },
   },
@@ -179,6 +200,9 @@ const languageStrings = {
       BOOKING_HELP_REPROMPT: "Say yes if you want to book %s, or no if you don't.",
       BOOKING_UNHANDLED_MESSAGE: "Sorry, I didn't get that. Did you want that room?",
       BOOKING_UNHANDLED_REPROMPT: "Please confirm if you want that room I found. Bye!",
+      CALENDAR_ERROR: "There was an error retrieving calendars: %s",
+      ROOM_ERROR: "There was an error retrieving a free room: %s",
+      BOOKING_ERROR: "There was an error booking the room: %s",
       STOP_MESSAGE: "Alright. Goodbye!"
     },
   }
