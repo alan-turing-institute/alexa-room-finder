@@ -9,7 +9,11 @@ module.exports = {
     "attributes": {
       "speechOutput": "Room Tom is available. Would you like me to book it for you?", //Change this to change the *last* message used.
       "STATE": "_CONFIRMMODE", //Change this to change the current state. - Options: "_CONFIRMMODE" or "" (blank).
-      "repromptSpeech": "Would you like me to book room Tom for you?" //Change this to change the *last* reprompt used.
+      "repromptSpeech": "Would you like me to book room Tom for you?", //Change this to change the *last* reprompt used.
+      "startTime": config.startTime,
+		  "endTime": config.endTime,
+	    "roomOwner": config.owner,
+	    "roomName": config.roomName
     },
     "user": {
       "userId": "",

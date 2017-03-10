@@ -6,57 +6,25 @@
 'use strict';
 
 var request = require('request');
+var Q = require('q');
 
-var requesters = {} //Requesters object to export - required by index.js
-
-/**
- * requesters.checkRoom - Checks on default calendar, between a start and end time, checks if
- * there are any events then, and calls an appropriate callback based off this.
- *
- * @param  {string} token       The OAuth2 access token provided by the Alexa Skill
- * @param  {date} startTime     The start time of the period to check
- * @param  {date} endTime       The end time of the period to check
- * @param  {function} trueCallback  Called if there are no events (a room is free)
- * @param  {function} falseCallback Called if there are events (a room isn't free)
- * @param  {function} errorCallback Called if there is an error
- * @return {null}
- */
-
-requesters.checkRoom = function(token, startTime, endTime, trueCallback, falseCallback, errorCallback) {
-  var url = 'https://graph.microsoft.com/v1.0/me/calendarview?startDateTime=' + startTime.toISOString() + '&endDateTime=' + endTime.toISOString(); //Using Office REST API v2.0 Endpoint
-
-  request.get({
-    url: url,
-    headers: {
-      authorization: 'Bearer ' + token,
-    },
-  }, function (err, response, body) {
-    var parsedBody = JSON.parse(body); //TODO: Parsed body errors don't seem to be handled properly by this code.
-
-    if (err) {
-      errorCallback(err)
-    } else if (parsedBody.error) {
-      errorCallback(parsedBody.error.message);
-    } else if (parsedBody.value == ''){
-      trueCallback();
-    } else {
-      falseCallback();
-    }
-  });
-}
+var requesters = {} //Requesters object to export - 'require'd by index.js
 
 /**
- * requesters.postRoom - Creates a half-an-hour event on default calendar, with a success and error callback
+ * requesters.postRoom - given a token and the owner of the room calendar, this books a new event on my calendar, inviting the room.
  *
- * @param  {string} token         The OAuth2 access token provided by the Alexa Skill
- * @param  {date} startTime       The start time of the meeting to be created
- * @param  {date} endTime         The end time of the meeting to be created
- * @param  {function} successCallback Called if there isn't an error
- * @param  {function} errorCallback   Called if there is an error
- * @return {null}
+ * @param  {string} token       The OAuth/JWT access token provided by the Alexa Skill
+ * @param  {string} owner       Address of owner of calendar to be booked
+ * @param  {string} startTime   ISO-formatted string with start time
+ * @param  {string} endTime     ISO-formatted string with end time
+ * @return {promise}
  */
 
-requesters.postRoom = function(token, startTime, endTime, successCallback, errorCallback) {
+
+requesters.postRoom = function(token, owner, startTime, endTime) {
+
+  var deferred = Q.defer();
+
   var newEvent = {
     Subject: 'Test meeting event to be created',
     Start: {
@@ -78,14 +46,14 @@ requesters.postRoom = function(token, startTime, endTime, successCallback, error
       },
       Type: 'Required',
       EmailAddress: {
-        Address: 'alexa@turing.ac.uk',
+        Address: owner,
         Name: 'Alexa'
       }
     } ]
   }
 
   request.post({
-    url: 'https://graph.microsoft.com/v1.0/me/events', //Using Office REST API v2.0 Endpoint
+    url: 'https://graph.microsoft.com/v1.0/me/events',
     headers: {
       'content-type': 'application/json',
       authorization: 'Bearer ' + token,
@@ -95,13 +63,70 @@ requesters.postRoom = function(token, startTime, endTime, successCallback, error
     var parsedBody = JSON.parse(body); //TODO: Parsed body errors don't seem to be handled properly by this code.
 
     if (err) {
-      errorCallback(err);
+      deferred.reject(err);
     } else if (parsedBody.error) {
-      errorCallback(parsedBody.error)
+      deferred.reject(parsedBody.error);
     } else {
-      successCallback();
+      deferred.resolve(owner);
     }
   });
+  return deferred.promise;
+}
+
+/**
+ * requesters.findFreeRoomByName - takes a set of names of calendars, and returns one free one. Performed asynchronously for speed.
+ *
+ * @param  {string} token       The OAuth/JWT access token to use in request
+ * @param  {string} startTime   ISO String showing start time
+ * @param  {string} endTime     ISO String showing end time
+ * @param  {array} namesToFind  The set of names to check
+ * @return {promise}            Promise containing name and owner in an object
+ */
+requesters.findFreeRoomByName = function(token, startTime, endTime, namesToFind) {
+
+  var deferred = Q.defer();
+
+  request.get({
+    url: 'https://graph.microsoft.com/beta/Users/Me/Calendars', //In order to obtain owner, the beta endpoint must be used. //TODO: When updated, change this endpoint.
+    headers: {
+      authorization: 'Bearer ' + token,
+    },
+  }, function (err, response, body) {
+    var parsedBody = JSON.parse(body);
+
+    if (err) {
+      deferred.reject(err);
+    } else if (parsedBody.error) {
+      deferred.reject(parsedBody.error.message)
+    } else {
+      parsedBody.value.forEach(function(calendar) {
+        if(~namesToFind.indexOf(calendar.name)) {
+
+          var calViewUrl = 'https://graph.microsoft.com/v1.0/Users/Me/Calendars/' + calendar.id.toString() + '/calendarView?startDateTime=' + startTime + '&endDateTime=' + endTime;
+
+          request.get({
+            url: calViewUrl,
+            headers: {
+              authorization: 'Bearer ' + token,
+            },
+          }, function (err, response, body) {
+            var parsedBody = JSON.parse(body);
+            if (err) {
+              deferred.reject(err)
+            } else if (parsedBody.error) {
+              deferred.reject(parsedBody.error.message)
+            } else if (parsedBody.value == ''){
+              deferred.resolve({
+                "owner" : calendar.owner.address.toString(),
+                "name" : calendar.name
+              });
+            }
+          });
+        }
+      });
+    }
+  });
+  return deferred.promise;
 }
 
 module.exports = requesters; //Export requesters.

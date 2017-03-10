@@ -10,7 +10,10 @@ const Alexa = require('alexa-sdk')
 const requesters = require('./requesters')
 
 //App ID of Alexa skill, found on Alexa Skill Page. Replace this if you're using this independently.
-const APP_ID = 'amzn1.ask.skill.d5f0bc95-03dc-47ea-9c54-1a663036163f';
+const APP_ID = '{app-id}';
+
+//Names of calendars to be looked for.
+const testNames = ['{calendar-name-1}', '{calendar-name-2}'];
 
 const states = {
   CONFIRMMODE: '_CONFIRMMODE' // Initiated by BookIntent, when user asks to book, and an available room is found.
@@ -56,15 +59,18 @@ const sessionHandlers = {
     var startTime = new Date();
     var endTime = new Date(startTime.getTime() + 30 * 60000);
 
-    requesters.checkRoom(this.event.session.user.accessToken, startTime, endTime, function() {
+    this.attributes.startTime = startTime.toISOString();
+    this.attributes.endTime = endTime.toISOString();
+
+    requesters.findFreeRoomByName(this.event.session.user.accessToken, this.attributes.startTime, this.attributes.endTime, testNames).then(function(creds) {
       that.handler.state = states.CONFIRMMODE;
-      that.attributes.speechOutput = that.t('ROOM_AVAILABLE_MESSAGE', that.t('WHICH_ROOM'));
-      that.attributes.repromptSpeech = that.t('ROOM_AVAILABLE_REPROMPT', that.t('WHICH_ROOM'));
+      that.attributes.roomOwner = creds.owner;
+      that.attributes.roomName = creds.name;
+      that.attributes.speechOutput = that.t('ROOM_AVAILABLE_MESSAGE', that.attributes.roomName);
+      that.attributes.repromptSpeech = that.t('ROOM_AVAILABLE_REPROMPT', that.attributes.roomName);
       that.emit(':ask', that.attributes.speechOutput, that.attributes.repromptSpeech);
-    }, function() {
-      that.emit(':tell', that.t('ROOM_UNAVAILABLE_MESSAGE'));
     }, function(error) {
-      that.emit(':tell', "An error occurred" + error);
+      that.emit(':tell', "There was an error.");
     });
   },
   //Only called when an unhandled intent is sent, which should never happen in the code at present, as there is only one custom intent, so that's effectively always used.
@@ -113,15 +119,11 @@ const confirmModeHandlers = Alexa.CreateStateHandler(states.CONFIRMMODE, {
 
     var that = this;
 
-    var startTime = new Date(); //TODO Edit this so it uses the exact same start and end time as the previous one. Otherwise we risk bugs on request.
-    var endTime = new Date(startTime.getTime() + 30 * 60000);
-
-    requesters.postRoom(this.event.session.user.accessToken, startTime, endTime, function() {
-      that.emit(':tell', that.t('ROOM_BOOKED', that.t('WHICH_ROOM')));
+    requesters.postRoom(this.event.session.user.accessToken, this.attributes.roomOwner, this.attributes.startTime, this.attributes.endTime).then(function(owner) {
+      that.emit(':tell', that.t('ROOM_BOOKED', that.attributes.roomName));
     }, function(error) {
-      that.emit(':tell', "An error occurred: " + error);
+      that.emit(':tell', "There was an error.");
     });
-
   },
   'AMAZON.StartOverIntent':function() {
     this.handler.state='';
@@ -147,13 +149,13 @@ const languageStrings = {
       HELP_REPROMPT: "Would you like me to book a meeting room for you?",
       UNHANDLED_MESSAGE: "Sorry, I didn't get that. Would you like me to book a room?",
       UNHANDLED_REPROMPT: "I can book meeting rooms for you. Why don't you book a room?",
-      ROOM_AVAILABLE_MESSAGE: "Room %s is available. Would you like me to book it for you?",
-      ROOM_AVAILABLE_REPROMPT: "Would you like me to book room %s for you?",
+      ROOM_AVAILABLE_MESSAGE: "%s is available. Would you like me to book it for you?",
+      ROOM_AVAILABLE_REPROMPT: "Would you like me to book %s for you?",
       ROOM_UNAVAILABLE_MESSAGE: "Sorry, no rooms are available right now. Maybe try again later!",
       WHICH_ROOM: "Tom",
-      ROOM_BOOKED: "Great. I have booked room %s for you.",
-      BOOKING_HELP_MESSAGE: "I checked the rooms, and room %s is available. Say yes if you'd like to book it.",
-      BOOKING_HELP_REPROMPT: "Say yes if you want to book room %s, or no if you don't.",
+      ROOM_BOOKED: "Great. I have booked %s for you.",
+      BOOKING_HELP_MESSAGE: "I checked the rooms, and %s is available. Say yes if you'd like to book it.",
+      BOOKING_HELP_REPROMPT: "Say yes if you want to book %s, or no if you don't.",
       BOOKING_UNHANDLED_MESSAGE: "Sorry, I didn't get that. Did you want that room?",
       BOOKING_UNHANDLED_REPROMPT: "Please confirm if you want that room I found. Bye!",
       STOP_MESSAGE: "Alright. Goodbye!"
@@ -168,13 +170,13 @@ const languageStrings = {
       HELP_REPROMPT: "Would you like me to book a meeting room for you?",
       UNHANDLED_MESSAGE: "Sorry, I didn't get that. Would you like me to book a room?",
       UNHANDLED_REPROMPT: "I can book meeting rooms for you. Why don't you book a room?",
-      ROOM_AVAILABLE_MESSAGE: "Room %s is available. Would you like me to book it for you?",
-      ROOM_AVAILABLE_REPROMPT: "Would you like me to book room %s for you?",
+      ROOM_AVAILABLE_MESSAGE: "%s is available. Would you like me to book it for you?",
+      ROOM_AVAILABLE_REPROMPT: "Would you like me to book %s for you?",
       ROOM_UNAVAILABLE_MESSAGE: "Sorry, no rooms are available right now. Maybe try again later!",
       WHICH_ROOM: "Tom",
-      ROOM_BOOKED: "Great. I have booked room %s for you.",
-      BOOKING_HELP_MESSAGE: "I checked the rooms, and room %s is available. Say yes if you'd like to book it.",
-      BOOKING_HELP_REPROMPT: "Say yes if you want to book room %s, or no if you don't.",
+      ROOM_BOOKED: "Great. I have booked %s for you.",
+      BOOKING_HELP_MESSAGE: "I checked the rooms, and %s is available. Say yes if you'd like to book it.",
+      BOOKING_HELP_REPROMPT: "Say yes if you want to book %s, or no if you don't.",
       BOOKING_UNHANDLED_MESSAGE: "Sorry, I didn't get that. Did you want that room?",
       BOOKING_UNHANDLED_REPROMPT: "Please confirm if you want that room I found. Bye!",
       STOP_MESSAGE: "Alright. Goodbye!"

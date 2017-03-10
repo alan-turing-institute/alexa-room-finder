@@ -12,9 +12,7 @@ followed by:
 
 > Book me a room
 
-It also has help, repeat, start-over and cancel functions.
-
-In its current version, instead of reading the meeting room calendars, and then creating an event in the correct one, it reads the personal calendar of whoever's account is linked to the Alexa Skill, checks if it's free for half-an-hour, then makes an event if it is free.
+It will then find you a room that is free (from a given list), and then confirm whether you want to book it. It also has help, repeat, start-over and cancel functions. It currently can only access explicitly shared calendars, and room calendars can't be explicitly shared. I'm looking into resolving this.
 
 ## Setting up the Alexa Skill
 
@@ -50,9 +48,9 @@ In order to set up the account linking part of this, I'd suggest opening the [Mi
 
 ### A note on endpoints
 
-If you know a lot about Azure, you might be wondering why our app registration isn't being made in Azure Active Directory or the Azure Portal. Microsoft is currently in the process of migrating from its V1 Authentication/Token Endpoints, to V2. The Azure Portal can currently only make apps that use the V1 Endpoints, whereas we want to use V2, as it's more likely to stay updated and it works for both personal and work accounts. Therefore, we instead have to use the Microsoft Application Registration Portal. From here you can also see any 'Azure AD only' (V1) applications, but you can only make so-called 'converged' (V2) applications. The Application Registration Portal also actually registers the application in Active Directory, so it has the same fundamental backend.
+If you know a lot about Azure, you might be wondering why our app registration isn't being made in Azure Active Directory or the Azure Portal. Microsoft is currently in the process of migrating from its V1 Authentication/Token Endpoints to V2. The Azure Portal can currently only make apps that use the V1 Endpoints. We want to use V2; it's more likely to stay updated, and it works for both personal and work accounts. Therefore, we have to use the 'Microsoft Application Registration Portal'. From here you can also see any 'Azure AD only' (V1) applications, but you can only make so-called 'converged' (V2) applications. The Application Registration Portal actually registers the application in Active Directory, so it has the same fundamental backend.
 
-Unrelated to this, you also have two possible APIs for accessing Office 365: Microsoft Graph, and the Outlook REST V2 API. We're using Graph, but it's fairly easy to migrate this over to Outlook if you want; I have tested this. Just make sure you modify all scopes/permissions, and update `lambda/requesters.js` to GET/POST to the right place.
+On a similar but unrelated note, you also have two available APIs for accessing Office 365: Microsoft Graph, and the Outlook REST V2 API. We're using Graph, but it's fairly easy to migrate this over to Outlook if you want; I have tested this. Just make sure you modify all scopes/permissions, and update `lambda/requesters.js` to GET/POST to the right place.
 
 ## Hosting the Skill
 
@@ -67,9 +65,9 @@ In order to make a function in Lambda:
 
 ### Deploying the code to Lambda
 * In order to deploy our code to Lambda we need to create a .zip file with all the necessary bits and bobs.
-* First, you need to make a small edit to `index.js`. Change `APP_ID = undefined` to the APP_ID found in the top left-hand corner of the Alexa console.
+* First, you need to make some small edits to `index.js`. Change `const APP_ID = '{app-id}'` to the APP_ID found in the top left-hand corner of the Alexa console. Then change `const testNames = ['{calendar-name-1}', '{calendar-name-2}'];` to an array of the names of rooms you'd like to find. **It's important that these names are exact as they're used to identify the right calendars.**
 * Then open a terminal, and in it navigate to the `lambda` directory. Then run `npm install`, and it will install the necessary modules for you.
-* Then within the lambda folder, select `index.js`, `requesters.js`, and `node_modules`, and right-click to compress them to a .zip file. Do not select zip the lambda folder from the root folder, as htat won't work.
+* Then within the lambda folder, select `index.js`, `requesters.js`, and `node_modules`, and right-click to compress them to a .zip file. **Do not compress the whole lambda folder from the root folder; that won't work.** It's fine if you accidentally compress `package.json` though!
 * Then upload your .zip file to Lambda!
 
 * Lastly, back on Lambda, leave your handler as index.handler, and use a lambda_basic_execution role. You may have to create this if this is your first Lambda function.
@@ -78,11 +76,15 @@ In order to make a function in Lambda:
 
 ## Testing The Lambda Function Locally
 
-In order to test locally, you'll first need a token to pass to the Lambda function. During development, I am using [Postman](https://www.getpostman.com/) to acquire tokens, and copying them in manually. You'll just need to edit file: `test/config.js`, replacing `{token}` with your actual token.
+In order to test locally, you'll first need a token to pass to the Lambda function. During development, I am using [Postman](https://www.getpostman.com/) to acquire tokens, and copying them in manually.
 
-[lambda-local](https://www.npmjs.com/package/lambda-local) to extremely useful for testing the main Lambda function locally. `test/lambda-local-test.js` is an customisable Javascript file you can use for this. To test, simply use Node to run this file from the console: `node test/lambda-local-test.js`
+Edit file: `test/config.js`, most importantly replacing `{token}` with your actual token. For the actual room booking intent, you also need to change the `owner` and `roomName` variables to be the email address of the room calendar, and the name of the room calendar.
+
+[lambda-local](https://www.npmjs.com/package/lambda-local) is extremely useful for testing the main Lambda function locally. `test/lambda-local-test.js` is an customisable Javascript file you can use for this. To test, simply use Node to run this file from the console: `node test/lambda-local-test.js`
 
 If you install lambda-local globally, you can also test from the console using this command: `lambda-local -l lambda/index.js -h handler -e test/filename.js` where filename is the JSON request you want to test. I've created test JSONs for pretty much of the available intents. The most important intent to test is the BookIntent in both the BLANK and \_CONFIRMMODE state, as that is the only intent that directly accesses the Office API.
+
+Lastly, I included a shell file so if you do install lambda-local globally, you can just run that `bash run_test.sh` and it will test every test intent.
 
 ## Performing the account link
 
@@ -90,4 +92,4 @@ Before you test properly on the Echo, you'll need to actually perform the link b
 
 ## Testing the skill online
 
-To test the skill online, go to the Test Section in the Alexa Skill Console, use echosim.io, or just use an Amazon Echo. Nothing like the real thing.
+To test the skill online, go to the Test Section in the Alexa Skill Console, use echosim.io, or just use an Amazon Echo.

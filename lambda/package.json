@@ -1,16 +1,16 @@
 {
   "name": "room-booker-skill",
-  "version": "0.0.2",
-  "description": "Books rooms at the Turing",
+  "version": "0.0.3",
+  "description": "Alexa skill to book rooms at the Turing Institute",
   "main": "index.js",
-  "dependencies": {
-    "alexa-sdk": "^1.0.7",
-    "request": "^2.80.0"
-  },
-  "devDependencies": {},
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Tom Knowles",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "alexa-sdk": "^1.0.7",
+    "q": "^1.4.1",
+    "request": "^2.81.0"
+  }
 }
