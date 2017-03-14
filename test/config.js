@@ -5,6 +5,8 @@ module.exports = {
   token "{token}",
   startTime: startDateTime.toISOString(),
   endTime: endDateTime.toISOString(),
-  owner: "{email address of room that's free}",
-  roomName: "{name of the room that's free}"
+  ownerAdress: "{email address of room that's free}",
+  //Usually the two below have the same value.
+  ownerName: "{name of room owner that's free}",
+  roomName: "{name of room calendar that's free}"
 }
