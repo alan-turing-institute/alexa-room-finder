@@ -72,19 +72,21 @@ const sessionHandlers = {
         //Finds a free room from one of the calendars, with error callback spoken through Alexa.
         requesters.findFreeRoom(that.event.session.user.accessToken, that.attributes.startTime, that.attributes.endTime, testNames, parsedCals)
         .then(function(creds) {
+          if (creds) {
+            //Changes state to confirm mode, as a free room has been found.
+            that.handler.state = states.CONFIRMMODE;
 
-          //Changes state to confirm mode, as a free room has been found.
-          that.handler.state = states.CONFIRMMODE;
+            //Stores the owner of the room and room name as attributes, for later use when booking room.
+            that.attributes.ownerAddress = creds.ownerAddress;
+            that.attributes.ownerName = creds.ownerName;
+            that.attributes.roomName = creds.name;
 
-          //Stores the owner of the room and room name as attributes, for later use when booking room.
-          that.attributes.ownerAddress = creds.ownerAddress;
-          that.attributes.ownerName = creds.ownerName;
-          that.attributes.roomName = creds.name;
-
-          that.attributes.speechOutput = that.t('ROOM_AVAILABLE_MESSAGE', that.attributes.roomName);
-          that.attributes.repromptSpeech = that.t('ROOM_AVAILABLE_REPROMPT', that.attributes.roomName);
-          that.emit(':ask', that.attributes.speechOutput, that.attributes.repromptSpeech);
-
+            that.attributes.speechOutput = that.t('ROOM_AVAILABLE_MESSAGE', that.attributes.roomName);
+            that.attributes.repromptSpeech = that.t('ROOM_AVAILABLE_REPROMPT', that.attributes.roomName);
+            that.emit(':ask', that.attributes.speechOutput, that.attributes.repromptSpeech);
+          } else {
+            that.emit(':tell', that.t('ROOM_UNAVAILABLE_MESSAGE'));
+          }
         }, function(roomError) {
           that.emit(':tell', that.t('ROOM_ERROR', roomError));
         });

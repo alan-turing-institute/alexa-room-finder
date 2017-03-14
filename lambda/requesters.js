@@ -128,6 +128,11 @@ requesters.findFreeRoom = function(token, startTime, endTime, namesToFind, parse
    * This is done asynchronously to speed up the process. This means a
    * system must be built to register if no calendars were free.
    * TODO: Add a way for it to register no rooms on the list being free.*/
+
+  var calendarsTotal = parsedCals.length;
+  console.log(calendarsTotal);
+  var calendarsUnavailable = 0;
+
   parsedCals.forEach(function(calendar) {
     if(~namesToFind.indexOf(calendar.name)) {
 
@@ -150,8 +155,18 @@ requesters.findFreeRoom = function(token, startTime, endTime, namesToFind, parse
             "ownerAddress" : calendar.owner.address,
             "name" : calendar.name
           });
+        } else {
+          calendarsUnavailable += 1;
+          if(calendarsUnavailable == calendarsTotal) {
+            deferred.resolve(false);
+          }
         }
       });
+    } else {
+      calendarsUnavailable += 1;
+      if(calendarsUnavailable == calendarsTotal) {
+        deferred.resolve(false);
+      }
     }
   });
   return deferred.promise;
