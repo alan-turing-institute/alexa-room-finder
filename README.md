@@ -12,7 +12,7 @@ followed by:
 
 > Book me a room
 
-It will then find you a room that is free (from a given list), and then confirm whether you want to book it. It also has help, repeat, start-over and cancel functions. It currently can only access explicitly shared calendars, and room calendars can't be explicitly shared. I'm looking into resolving this.
+It will then find you a room that is free (from a given list), and then confirm whether you want to book it. It also has help, repeat, start-over and cancel functions.
 
 ## Setting up the Alexa Skill
 
@@ -52,6 +52,14 @@ If you know a lot about Azure, you might be wondering why our app registration i
 
 On a similar but unrelated note, you also have two available APIs for accessing Office 365: Microsoft Graph, and the Outlook REST V2 API. We're using Graph, but it's fairly easy to migrate this over to Outlook if you want; I have tested this. Just make sure you modify all scopes/permissions, and update `lambda/requesters.js` to GET/POST to the right place.
 
+## Calendar sharing
+
+The `Calendars.ReadWrite.Shared` permission as currently provided by as part of the Graph API is broken. [This StackOverflow question](http://stackoverflow.com/questions/42761308/errors-accessing-shared-room-calendars-through-microsoft-graph-api) shows and confirms the issue, as of 14/02/17. In order to bypass the use of this permission, we therefore require some fairly specific calendar sharing, so we only require our own list of calendars... To do this, open an account **that is a delegate of and has full access to** the Room Calendars you want to use. On this account, click open another mailbox, then type in the email address of the Room Calendar you want to use.
+
+![Calendar Sharing](https://cloud.githubusercontent.com/assets/20475469/23910246/ea494380-08d0-11e7-9f39-885efc1cdf4f.png)
+
+Then, on the page that opens, navigate to the calendar page, click 'Share' and share the default calendar to the Office365 account you plan to use to authenticate the Alexa app. You only need 'view when busy' access for the skill to work. Sorry, you'll have to repeat this for every other calendar you intend to use.
+
 ## Hosting the Skill
 
 The skill is built to be hosted on Amazon Web Services' [Lambda](https://aws.amazon.com/lambda/).
@@ -64,6 +72,7 @@ In order to make a function in Lambda:
 * On 'Configure Function', pick any name for your function, then select 'Upload a .zip file' for code-entry type.
 
 ### Deploying the code to Lambda
+
 * In order to deploy our code to Lambda we need to create a .zip file with all the necessary bits and bobs.
 * First, you need to make some small edits to `index.js`. Change `const APP_ID = '{app-id}'` to the APP_ID found in the top left-hand corner of the Alexa console. Then change `const testNames = ['{calendar-name-1}', '{calendar-name-2}'];` to an array of the names of rooms you'd like to find. **It's important that these names are exact as they're used to identify the right calendars.**
 * Then open a terminal, and in it navigate to the `lambda` directory. Then run `npm install`, and it will install the necessary modules for you.
@@ -84,7 +93,7 @@ Edit file: `test/config.js`, most importantly replacing `{token}` with your actu
 
 If you install lambda-local globally, you can also test from the console using this command: `lambda-local -l lambda/index.js -h handler -e test/filename.js` where filename is the JSON request you want to test. I've created test JSONs for pretty much of the available intents. The most important intent to test is the BookIntent in both the BLANK and \_CONFIRMMODE state, as that is the only intent that directly accesses the Office API.
 
-Lastly, I included a shell file so if you do install lambda-local globally, you can just run that `bash run_test.sh` and it will test every test intent.
+Lastly, I included a shell script, so if you do install lambda-local globally, you can just run that `bash run_test.sh` and it will test every test intent.
 
 ## Performing the account link
 

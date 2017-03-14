@@ -12,7 +12,8 @@ module.exports = {
       "repromptSpeech": "I'm %s. My job is to book you a room! For further instructions, please ask for help.", //Change this to change the *last* reprompt used.
       "startTime": config.startTime,
 		  "endTime": config.endTime,
-	    "roomOwner": config.owner,
+	    "ownerAddress": config.ownerAddress,
+      "ownerName": config.ownerName,
 	    "roomName": config.roomName
     },
     "user": {

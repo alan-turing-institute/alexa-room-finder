@@ -1,19 +1,20 @@
 /**
  * @file Main Alexa Skill handling code. Ensure handler is index.handler (which is default)
- * in order to call this.
+ * in order to call this as the opening of the file. Must be zipped with requesters.js, and
+ * appropriate node_modules in order to work.
  * @summary Handles Alexa skill.
  */
 
 'use strict';
 
 const Alexa = require('alexa-sdk')
-const requesters = require('./requesters')
+const requesters = require('./requesters') //For making requests to Graph API
 
 //App ID of Alexa skill, found on Alexa Skill Page. Replace this if you're using this independently.
 const APP_ID = '{app-id}';
 
 //Names of all calendars to be looked for as rooms.
-const testNames = ['{calendar-name-1}', '{calendar-name-2}'];
+const testNames = ['alexaroom1', 'alexaroom2'];
 
 //Object of all states to be used by the code.
 const states = {
@@ -76,7 +77,8 @@ const sessionHandlers = {
           that.handler.state = states.CONFIRMMODE;
 
           //Stores the owner of the room and room name as attributes, for later use when booking room.
-          that.attributes.roomOwner = creds.owner;
+          that.attributes.ownerAddress = creds.ownerAddress;
+          that.attributes.ownerName = creds.ownerName;
           that.attributes.roomName = creds.name;
 
           that.attributes.speechOutput = that.t('ROOM_AVAILABLE_MESSAGE', that.attributes.roomName);
@@ -137,14 +139,14 @@ const confirmModeHandlers = Alexa.CreateStateHandler(states.CONFIRMMODE, {
     var that = this;
 
     //Posts room, with error callback spoken through Alexa
-    requesters.postRoom(this.event.session.user.accessToken, this.attributes.roomOwner, this.attributes.startTime, this.attributes.endTime).then(function(owner) {
-      that.emit(':tell', that.t('ROOM_BOOKED', that.attributes.roomName));
+    requesters.postRoom(this.event.session.user.accessToken, this.attributes.ownerAddress, this.attributes.ownerName, this.attributes.startTime, this.attributes.endTime).then(function(owner) {
+      that.emit(':tell', that.t('ROOM_BOOKED', that.attributes.ownerName));
     }, function(bookError) {
       that.emit(':tell', that.t('BOOKING_ERROR', bookError));
     });
   },
   'AMAZON.StartOverIntent':function() {
-    this.handler.state='';
+    this.handler.state=''; //TODO: Fix StartOverIntent and other intents. this.handler.state='' doesn't work properly.
     this.emitWithState('LaunchRequest');
   },
   //Only called when an unhandled intent is sent, which should never happen in the code at present, as there is only one custom intent, so that's effectively always used.

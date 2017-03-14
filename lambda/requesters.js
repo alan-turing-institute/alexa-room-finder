@@ -14,16 +14,17 @@ var requesters = {} //Requesters object to export - 'require'd by index.js
  * requesters.postRoom - given a token and the owner of the room calendar, this books a new event on my calendar, inviting the room.
  *
  * @param  {string} token       The JWT access token provided by the Alexa Skill.
- * @param  {string} owner       Address of owner of calendar to be booked.
+ * @param  {string} ownerAddress       Address of owner of calendar to be booked.
+ * @param  {string} ownerName   Name of owner of calendar to be booked.
  * @param  {string} startTime   Start time of meeting to post, formatted as ISO-8601 string.
  * @param  {string} endTime     End time of meeting to post, formatted as ISO-8601 string.
- * @return {promise}            Promise resolved to the owner of calendar used. //TODO: This owner is not actually used by index.js, but was (and may be) useful for debug. Change before production.
+ * @return {promise}            Promise resolved to the owner of calendar used. //TODO: This value is not actually used by index.js, but can be very useful for debug. Change before release.
  */
-requesters.postRoom = function(token, owner, startTime, endTime) {
+requesters.postRoom = function(token, ownerAddress, ownerName, startTime, endTime) {
 
   var deferred = Q.defer();
 
-  //Structure of event to be made
+  //Event to be made as JSON
   var newEvent = {
     Subject: 'Test meeting event to be created',
     Start: {
@@ -45,8 +46,8 @@ requesters.postRoom = function(token, owner, startTime, endTime) {
       },
       Type: 'Required',
       EmailAddress: {
-        Address: owner,
-        Name: 'Alexa' //TODO: I forgot to include the actual owner's name. This has to be updated.
+        Address: ownerAddress,
+        Name: ownerName
       }
     } ]
   }
@@ -60,14 +61,14 @@ requesters.postRoom = function(token, owner, startTime, endTime) {
     },
     body: JSON.stringify(newEvent)
   }, function (err, response, body) {
-    var parsedBody = JSON.parse(body); //TODO: Parsed body errors don't seem to be handled properly by this code.
+    var parsedBody = JSON.parse(body); //TODO: Parsed body errors due to incorrect tokens are not handled properly by this code. Place after if(err) to fix.
 
     if (err) {
       deferred.reject(err);
     } else if (parsedBody.error) {
       deferred.reject(parsedBody.error);
     } else {
-      deferred.resolve(owner);
+      deferred.resolve(ownerName);
     }
   });
   return deferred.promise;
@@ -119,14 +120,17 @@ requesters.findFreeRoom = function(token, startTime, endTime, namesToFind, parse
 
   var deferred = Q.defer();
 
-  /*For each calendar:
+  /* For each calendar:
    * - check if its name is in namesToFind.
    * - if it is in namesToFind, check if it's free.
    * - if it is free, return its owner and name in a JSON.
    *
-   * TODO: Add some way for it to register no rooms on the list being free.*/
+   * This is done asynchronously to speed up the process. This means a
+   * system must be built to register if no calendars were free.
+   * TODO: Add a way for it to register no rooms on the list being free.*/
   parsedCals.forEach(function(calendar) {
     if(~namesToFind.indexOf(calendar.name)) {
+
       var calViewUrl = 'https://graph.microsoft.com/v1.0/Users/Me/Calendars/' + calendar.id.toString() + '/calendarView?startDateTime=' + startTime + '&endDateTime=' + endTime;
 
       request.get({
@@ -140,9 +144,10 @@ requesters.findFreeRoom = function(token, startTime, endTime, namesToFind, parse
           deferred.reject(err)
         } else if (parsedBody.error) {
           deferred.reject(parsedBody.error.message)
-        } else if (parsedBody.value == ''){
+        } else if (parsedBody.value == '') {
           deferred.resolve({
-            "owner" : calendar.owner.address.toString(), //TODO: Add owner name, and rename owner address
+            "ownerName" : calendar.owner.name,
+            "ownerAddress" : calendar.owner.address,
             "name" : calendar.name
           });
         }
