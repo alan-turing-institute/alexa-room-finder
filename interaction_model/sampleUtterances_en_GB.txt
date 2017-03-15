@@ -2,3 +2,5 @@ BookIntent book me a room
 BookIntent book a room
 BookIntent book room
 BookIntent to book a room
+
+DurationIntent {Duration}

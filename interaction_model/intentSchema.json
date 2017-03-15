@@ -4,6 +4,15 @@
       "intent": "BookIntent"
     },
     {
+      "intent": "DurationIntent",
+      "slots" : [
+        {
+          "name": "Duration",
+          "type": "AMAZON.DURATION"
+        }
+      ]
+    },
+    {
       "intent": "AMAZON.RepeatIntent"
     },
     {
