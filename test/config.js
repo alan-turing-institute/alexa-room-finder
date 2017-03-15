@@ -2,7 +2,7 @@ var startDateTime =  new Date();
 var endDateTime = new Date(startDateTime.getTime() + 30 * 60000);
 
 module.exports = {
-  token "{token}",
+  token: "{token}",
   startTime: startDateTime.toISOString(),
   endTime: endDateTime.toISOString(),
   ownerAdress: "{email address of room that's free}",

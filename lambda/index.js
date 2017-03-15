@@ -7,8 +7,8 @@
 
 'use strict';
 
-const Alexa = require('alexa-sdk')
-const requesters = require('./requesters') //For making requests to Graph API
+const Alexa = require('alexa-sdk');
+const requesters = require('./requesters'); //For making requests to Graph API
 
 //App ID of Alexa skill, found on Alexa Skill Page. Replace this if you're using this independently.
 const APP_ID = '{app-id}';
@@ -120,16 +120,13 @@ const confirmModeHandlers = Alexa.CreateStateHandler(states.CONFIRMMODE, {
   },
   //Stop, cancel, and no, all end session. Can be individually edited for more complex conversations.
   'AMAZON.StopIntent': function () {
-    this.handler.state='';
-    this.emitWithState('SessionEndedRequest');
+    this.emit('SessionEndedRequest');
   },
   'AMAZON.CancelIntent': function () {
-    this.handler.state='';
-    this.emitWithState('SessionEndedRequest');
+    this.emit('SessionEndedRequest');
   },
   'AMAZON.NoIntent': function() {
-    this.handler.state='';
-    this.emitWithState('SessionEndedRequest');
+    this.emit('SessionEndedRequest');
   },
   //'Yes' calls booking finalisation function
   'AMAZON.YesIntent': function() {
@@ -148,8 +145,8 @@ const confirmModeHandlers = Alexa.CreateStateHandler(states.CONFIRMMODE, {
     });
   },
   'AMAZON.StartOverIntent':function() {
-    this.handler.state=''; //TODO: Fix StartOverIntent and other intents. this.handler.state='' doesn't work properly.
-    this.emitWithState('LaunchRequest');
+    this.handler.state = '';
+    this.emit('LaunchRequest');
   },
   //Only called when an unhandled intent is sent, which should never happen in the code at present, as there is only one custom intent, so that's effectively always used.
   'Unhandled': function() {
