@@ -11,13 +11,14 @@ const Alexa = require('alexa-sdk');
 const requesters = require('./requesters'); //For making requests to Graph API
 
 //App ID of Alexa skill, found on Alexa Skill Page. Replace this if you're using this independently.
-const APP_ID = '{app-id}';
+const APP_ID = 'amzn1.ask.skill.d5f0bc95-03dc-47ea-9c54-1a663036163f';
 
 //Names of all calendars to be looked for as rooms.
 const testNames = ['alexaroom1', 'alexaroom2'];
 
 //Object of all states to be used by the code.
 const states = {
+  RESTARTMODE: '_RESTARTMODE',
   CONFIRMMODE: '_CONFIRMMODE' // Initiated by BookIntent, when user asks to book, and an available room is found.
 };
 
@@ -106,6 +107,81 @@ const sessionHandlers = {
   },
 };
 
+//This set of handlers is only used when you call a StartOver intent from Confirm Mode. Every intent here is an exact copy of its counterpart in sessionhandlers.
+const restartModeHandlers = Alexa.CreateStateHandler(states.RESTARTMODE, {
+  //Gives a help message
+  'AMAZON.HelpIntent': function () {
+    this.attributes.speechOutput = this.t('HELP_MESSAGE');
+    this.attributes.repromptSpeech = this.t('HELP_REPROMPT');
+    this.emit(':ask', this.attributes.speechOutput, this.attributes.repromptSpeech);
+  },
+  //Repeats last messages
+  'AMAZON.RepeatIntent': function () {
+    this.emit(':ask', this.attributes.speechOutput, this.attributes.repromptSpeech);
+  },
+  //Stop, cancel, and no, all end session. Can be individually edited for more complex conversations.
+  'AMAZON.StopIntent': function () {
+    this.emit('SessionEndedRequest');
+  },
+  'AMAZON.CancelIntent': function () {
+    this.emit('SessionEndedRequest');
+  },
+  'AMAZON.NoIntent': function() {
+    this.emit('SessionEndedRequest');
+  },
+  //Yes calls booking function
+  'AMAZON.YesIntent': function() {
+    this.emitWithState('BookIntent');
+  },
+  //Does the key booking function. This is intended to work from a LaunchRequest - i.e. "Ask room booker to book me a room."
+  'BookIntent': function() {
+
+    var that = this;
+
+    //Define start and end time of period to check
+    var startTime = new Date();
+    var endTime = new Date(startTime.getTime() + 30 * 60000);
+
+    //Save dates in attributes as ISO strings, so they can be accessed to post the event later.
+    this.attributes.startTime = startTime.toISOString();
+    this.attributes.endTime = endTime.toISOString();
+
+    //Retrieves all of the users calendars, with error callback spoken through Alexa.
+    requesters.getCalendars(that.event.session.user.accessToken)
+      .then(function(parsedCals) {
+        //Finds a free room from one of the calendars, with error callback spoken through Alexa.
+        requesters.findFreeRoom(that.event.session.user.accessToken, that.attributes.startTime, that.attributes.endTime, testNames, parsedCals)
+        .then(function(creds) {
+          if (creds) {
+            //Changes state to confirm mode, as a free room has been found.
+            that.handler.state = states.CONFIRMMODE;
+
+            //Stores the owner of the room and room name as attributes, for later use when booking room.
+            that.attributes.ownerAddress = creds.ownerAddress;
+            that.attributes.ownerName = creds.ownerName;
+            that.attributes.roomName = creds.name;
+
+            that.attributes.speechOutput = that.t('ROOM_AVAILABLE_MESSAGE', that.attributes.roomName);
+            that.attributes.repromptSpeech = that.t('ROOM_AVAILABLE_REPROMPT', that.attributes.roomName);
+            that.emit(':ask', that.attributes.speechOutput, that.attributes.repromptSpeech);
+          } else {
+            that.emit(':tell', that.t('ROOM_UNAVAILABLE_MESSAGE'));
+          }
+        }, function(roomError) {
+          that.emit(':tell', that.t('ROOM_ERROR', roomError));
+        });
+      }, function(calError) {
+        that.emit(':tell', that.t('CALENDAR_ERROR', calError));
+      });
+    },
+  //Only called when an unhandled intent is sent, which should never happen in the code at present, as there is only one custom intent, so that's effectively always used.
+  'Unhandled': function() {
+    this.attributes.speechOutput = this.t('UNHANDLED_MESSAGE');
+    this.attributes.repromptSpeech = this.t('UNHANDLED_REPROMPT');
+    this.emit(':ask', this.attributes.speechOutput, this.attributes.repromptSpeech);
+  }
+});
+
 //Set of handlers used after you've confirmed you want to book a room.
 const confirmModeHandlers = Alexa.CreateStateHandler(states.CONFIRMMODE, {
   //Gives a different help message
@@ -145,8 +221,10 @@ const confirmModeHandlers = Alexa.CreateStateHandler(states.CONFIRMMODE, {
     });
   },
   'AMAZON.StartOverIntent':function() {
-    this.handler.state = '';
-    this.emit('LaunchRequest');
+    this.handler.state = states.RESTARTMODE;
+    this.attributes.speechOutput = this.t('WELCOME_MESSAGE');
+    this.attributes.repromptSpeech = this.t('WELCOME_REPROMPT', this.t('SKILL_NAME'));
+    this.emit(':ask', this.attributes.speechOutput, this.attributes.repromptSpeech);
   },
   //Only called when an unhandled intent is sent, which should never happen in the code at present, as there is only one custom intent, so that's effectively always used.
   'Unhandled': function() {
@@ -212,6 +290,6 @@ exports.handler = (event, context) => {
   const alexa = Alexa.handler(event, context);
   alexa.APP_ID = APP_ID; //App ID of Alexa skill, found on skill's page.
   alexa.resources = languageStrings;
-  alexa.registerHandlers(sessionHandlers, confirmModeHandlers);
+  alexa.registerHandlers(sessionHandlers, confirmModeHandlers, restartModeHandlers);
   alexa.execute();
 };
