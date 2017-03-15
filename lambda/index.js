@@ -11,7 +11,7 @@ const Alexa = require('alexa-sdk');
 const requesters = require('./requesters'); //For making requests to Graph API
 
 //App ID of Alexa skill, found on Alexa Skill Page. Replace this if you're using this independently.
-const APP_ID = 'amzn1.ask.skill.d5f0bc95-03dc-47ea-9c54-1a663036163f';
+const APP_ID = '{app-id}';
 
 //Names of all calendars to be looked for as rooms.
 const testNames = ['alexaroom1', 'alexaroom2'];
@@ -222,6 +222,12 @@ const confirmModeHandlers = Alexa.CreateStateHandler(states.CONFIRMMODE, {
   },
   'AMAZON.StartOverIntent':function() {
     this.handler.state = states.RESTARTMODE;
+    this.attributes.ownerAddress = undefined;
+    this.attributes.ownerName = undefined;
+    this.attributes.roomName = undefined;
+    this.attributes.startTime = undefined;
+    this.attributes.endTime = undefined;
+
     this.attributes.speechOutput = this.t('WELCOME_MESSAGE');
     this.attributes.repromptSpeech = this.t('WELCOME_REPROMPT', this.t('SKILL_NAME'));
     this.emit(':ask', this.attributes.speechOutput, this.attributes.repromptSpeech);

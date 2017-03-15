@@ -7,9 +7,9 @@ module.exports = {
       "applicationId": ""
     },
     "attributes": {
-      "speechOutput": "Would you like to book a room for half an hour?", //Change this to change the *last* message used.
+      "speechOutput": config.roomName + " is available. Would you like me to book it for you?", //Change this to change the *last* message used.
       "STATE": "_CONFIRMMODE", //Change this to change the current state. - Options: "_CONFIRMMODE" or "" (blank).
-      "repromptSpeech": "I'm %s. My job is to book you a room! For further instructions, please ask for help.", //Change this to change the *last* reprompt used.
+      "repromptSpeech": "Would you like me to book " + config.roomName + " for you?", //Change this to change the *last* reprompt used.
       "startTime": config.startTime,
 		  "endTime": config.endTime,
       "ownerAddress": config.ownerAddress,

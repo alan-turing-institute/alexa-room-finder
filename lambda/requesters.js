@@ -26,7 +26,7 @@ requesters.postRoom = function(token, ownerAddress, ownerName, startTime, endTim
 
   //Event to be made as JSON
   var newEvent = {
-    Subject: 'Test meeting event to be created',
+    Subject: 'Alexa\'s Meeting',
     Start: {
       DateTime: startTime,
       TimeZone: 'GMT'
