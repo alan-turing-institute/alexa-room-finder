@@ -147,8 +147,15 @@ const timeModeHandlers = Alexa.CreateStateHandler(states.TIMEMODE, {
       var bookingDuration = moment.duration(this.event.request.intent.slots.Duration.value);
 
       console.log(bookingDuration.asMinutes());
-
-      if(bookingDuration.asHours() < 2) {
+      if (bookingDuration.asHours() > 2) {
+        this.attributes.speechOutput = this.t('TIME_TOO_LONG_MESSAGE');
+        this.attributes.repromptSpeech = this.t('TIME_TOO_LONG_REPROMPT');
+        this.emit(':ask', this.attributes.speechOutput, this.attributes.repromptSpeech);
+      } else if (bookingDuration.asHours() <= 0) {
+        this.attributes.speechOutput = this.t('TIME_UNHANDLED_MESSAGE');
+        this.attributes.repromptSpeech = this.t('TIME_UNHANDLED_REPROMPT');
+        this.emit(':ask', this.attributes.speechOutput, this.attributes.repromptSpeech);
+      } else {
 
         //Define start and end time of period to check
         var startTime = new Date();
@@ -157,6 +164,7 @@ const timeModeHandlers = Alexa.CreateStateHandler(states.TIMEMODE, {
         //Save dates in attributes as ISO strings, so they can be accessed to post the event later.
         this.attributes.startTime = startTime.toISOString();
         this.attributes.endTime = endTime.toISOString();
+        this.attributes.duration = bookingDuration.asMinutes();
 
         //Retrieves all of the users calendars, with error callback spoken through Alexa.
         requesters.getCalendars(that.event.session.user.accessToken)
@@ -177,8 +185,8 @@ const timeModeHandlers = Alexa.CreateStateHandler(states.TIMEMODE, {
               that.attributes.repromptSpeech = that.t('ROOM_AVAILABLE_REPROMPT', that.attributes.roomName);
               that.emit(':ask', that.attributes.speechOutput, that.attributes.repromptSpeech);
             } else {
-              that.attributes.speechOutput = that.t('TIME_UNAVAILABLE_MESSAGE');
-              that.attributes.repromptSpeech = that.t('TIME_UNAVAILABLE_REPROMPT');
+              that.attributes.speechOutput = that.t('TIME_UNAVAILABLE_MESSAGE', that.attributes.duration);
+              that.attributes.repromptSpeech = that.t('TIME_UNAVAILABLE_REPROMPT', that.attributes.duration);
               that.emit(':ask', that.attributes.speechOutput, that.attributes.repromptSpeech);
             }
           }, function(roomError) {
@@ -187,10 +195,6 @@ const timeModeHandlers = Alexa.CreateStateHandler(states.TIMEMODE, {
         }, function(calError) {
           that.emit(':tell', that.t('CALENDAR_ERROR', calError));
         });
-      } else {
-        this.attributes.speechOutput = this.t('TIME_TOO_LONG_MESSAGE');
-        this.attributes.repromptSpeech = this.t('TIME_TOO_LONG_REPROMPT');
-        this.emit(':ask', this.attributes.speechOutput, this.attributes.repromptSpeech);
       }
     } else {
       this.attributes.speechOutput = this.t('TIME_UNHANDLED_MESSAGE');
@@ -205,6 +209,7 @@ const timeModeHandlers = Alexa.CreateStateHandler(states.TIMEMODE, {
     this.attributes.roomName = undefined;
     this.attributes.startTime = undefined;
     this.attributes.endTime = undefined;
+    this.attributes.duration = undefined;
 
     this.attributes.speechOutput = this.t('WELCOME_MESSAGE');
     this.attributes.repromptSpeech = this.t('WELCOME_REPROMPT', this.t('SKILL_NAME'));
@@ -250,7 +255,7 @@ const confirmModeHandlers = Alexa.CreateStateHandler(states.CONFIRMMODE, {
 
     //Posts room, with error callback spoken through Alexa
     requesters.postRoom(this.event.session.user.accessToken, this.attributes.ownerAddress, this.attributes.ownerName, this.attributes.startTime, this.attributes.endTime).then(function(owner) {
-      that.emit(':tell', that.t('ROOM_BOOKED', that.attributes.ownerName));
+      that.emit(':tellWithCard', that.t('ROOM_BOOKED', that.attributes.ownerName, that.attributes.duration), that.t('CARD_ROOM_BOOKED_TITLE', that.attributes.ownerName), that.t('CARD_ROOM_BOOKED_CONTENT', that.attributes.ownerName, that.attributes.duration));
     }, function(bookError) {
       that.emit(':tell', that.t('BOOKING_ERROR', bookError));
     });
@@ -290,7 +295,9 @@ const languageStrings = {
       ROOM_AVAILABLE_MESSAGE: "%s is available. Would you like me to book it for you?",
       ROOM_AVAILABLE_REPROMPT: "Would you like me to book %s for you?",
       ROOM_UNAVAILABLE_MESSAGE: "Sorry, no rooms are available right now. Maybe try again later!",
-      ROOM_BOOKED: "Great. I have booked %s for you.",
+      ROOM_BOOKED: "Great. I have booked %s for %s minutes.",
+      CARD_ROOM_BOOKED_TITLE: "%s booked.",
+      CARD_ROOM_BOOKED_CONTENT: "I've booked %s for %s minutes.",
       BOOKING_HELP_MESSAGE: "I checked the rooms, and %s is available. Say yes if you'd like to book it.",
       BOOKING_HELP_REPROMPT: "Say yes if you want to book %s, or no if you don't.",
       BOOKING_UNHANDLED_MESSAGE: "Sorry, I didn't get that. Did you want that room?",
@@ -301,8 +308,8 @@ const languageStrings = {
       TIME_HELP_REPROMPT: "Tell me how long you'd like a room for, or say 'cancel' or 'stop' to quit.",
       TIME_DURATION_MESSAGE: "How long would you like to book the room for?",
       TIME_DURATION_REPROMPT: "Please tell me how long you'd like the room for. The maximum is 2 hours.",
-      TIME_UNAVAILABLE_MESSAGE: "Sorry, no rooms were available for that period of time. Maybe give me a shorter time, or say cancel.",
-      TIME_UNAVAILABLE_REPROMPT: "Please give me a shorter time, or say cancel if you're done.",
+      TIME_UNAVAILABLE_MESSAGE: "Sorry, no rooms were available for %s minutes. Maybe give me a shorter time, or say cancel if you're done.",
+      TIME_UNAVAILABLE_REPROMPT: "No rooms were available for %s minutes. Please give me a shorter time, or say cancel if you're done.",
       TIME_TOO_LONG_MESSAGE: "Sorry, I can only book meeting rooms for 2 hours. Please tell me a shorter time.",
       TIME_TOO_LONG_REPROMPT: "Please give me a time shorter than 2 hours, and I'll try to find you a room.",
       CALENDAR_ERROR: "There was an error retrieving calendars: %s",
@@ -323,7 +330,9 @@ const languageStrings = {
       ROOM_AVAILABLE_MESSAGE: "%s is available. Would you like me to book it for you?",
       ROOM_AVAILABLE_REPROMPT: "Would you like me to book %s for you?",
       ROOM_UNAVAILABLE_MESSAGE: "Sorry, no rooms are available right now. Maybe try again later!",
-      ROOM_BOOKED: "Great. I have booked %s for you.",
+      ROOM_BOOKED: "Great. I have booked %s for %s minutes.",
+      CARD_ROOM_BOOKED_TITLE: "%s booked.",
+      CARD_ROOM_BOOKED_CONTENT: "I've booked %s for %s minutes.",
       BOOKING_HELP_MESSAGE: "I checked the rooms, and %s is available. Say yes if you'd like to book it.",
       BOOKING_HELP_REPROMPT: "Say yes if you want to book %s, or no if you don't.",
       BOOKING_UNHANDLED_MESSAGE: "Sorry, I didn't get that. Did you want that room?",
@@ -334,8 +343,8 @@ const languageStrings = {
       TIME_HELP_REPROMPT: "Tell me how long you'd like a room for, or say 'cancel' or 'stop' to quit.",
       TIME_DURATION_MESSAGE: "How long would you like to book the room for?",
       TIME_DURATION_REPROMPT: "Please tell me how long you'd like the room for. The maximum is 2 hours.",
-      TIME_UNAVAILABLE_MESSAGE: "Sorry, no rooms were available for that period of time. Maybe give me a shorter time, or say cancel.",
-      TIME_UNAVAILABLE_REPROMPT: "Please give me a shorter time, or say cancel if you're done.",
+      TIME_UNAVAILABLE_MESSAGE: "Sorry, no rooms were available for %s minutes. Maybe give me a shorter time, or say cancel if you're done.",
+      TIME_UNAVAILABLE_REPROMPT: "No rooms were available for %s minutes. Please give me a shorter time, or say cancel if you're done.",
       TIME_TOO_LONG_MESSAGE: "Sorry, I can only book meeting rooms for 2 hours. Please tell me a shorter time.",
       TIME_TOO_LONG_REPROMPT: "Please give me a time shorter than 2 hours, and I'll try to find you a room.",
       CALENDAR_ERROR: "There was an error retrieving calendars: %s",
