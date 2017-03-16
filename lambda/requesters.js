@@ -130,7 +130,6 @@ requesters.findFreeRoom = function(token, startTime, endTime, namesToFind, parse
    * TODO: Add a way for it to register no rooms on the list being free.*/
 
   var calendarsTotal = parsedCals.length;
-  console.log(calendarsTotal);
   var calendarsUnavailable = 0;
 
   parsedCals.forEach(function(calendar) {

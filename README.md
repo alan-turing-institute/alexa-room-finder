@@ -97,16 +97,26 @@ In order to make a function in Lambda:
 
 In order to test locally, you'll first need a token to pass to the Lambda function. During development, I am using [Postman](https://www.getpostman.com/) to acquire tokens, and copying them in manually.
 
-Edit file: `test/config.js`, most importantly replacing `{token}` with your actual token. You'll also want to change the various other variables. For example:
+Edit file: `test/config.js`, most importantly replacing `{token}` with your actual token, and `{app-id}` with the same App ID being used in index.js. You'll also want to change the various other variables. For example:
 
 `module.exports = {
+
+  appId: "amzn1.ask.skill.00000000-0000-0000-0000-000000000000",
+
   token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJEb24ndCBkZWNvZGUgZXhhbXBsZSB0b2tlbnMuIiwiZXhwIjoxLCJuYW1lIjoia25vd2xzaWUiLCJhZG1pbiI6ZmFsc2V9.QhndPM-IJk1XcgntgXqXlI-9mmEesoRLKE1uLhrK5tg",
+
   startTime: startDateTime.toISOString(),
+
   endTime: endDateTime.toISOString(),
+
   ownerAddress: "alexaroom1@business.com",
+
   //Usually the two below have the same value.
+
   ownerName: "alexaroom1",
+
   roomName: "alexaroom1"
+
 }`
 
 [lambda-local](https://www.npmjs.com/package/lambda-local) is extremely useful for testing the main Lambda function locally. `test/lambda-local-test.js` is one editable Javascript file you can use. To test it, simply use Node to run this file from the console: `node test/lambda-local-test.js`. There's a better way to test though:

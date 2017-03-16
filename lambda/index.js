@@ -146,6 +146,8 @@ const timeModeHandlers = Alexa.CreateStateHandler(states.TIMEMODE, {
 
       var bookingDuration = moment.duration(this.event.request.intent.slots.Duration.value);
 
+      console.log(bookingDuration.asMinutes());
+
       if(bookingDuration.asHours() < 2) {
 
         //Define start and end time of period to check
@@ -347,7 +349,7 @@ const languageStrings = {
 //Main
 exports.handler = (event, context) => {
   const alexa = Alexa.handler(event, context);
-  alexa.APP_ID = APP_ID; //App ID of Alexa skill, found on skill's page.
+  alexa.appId = APP_ID; //App ID of Alexa skill, found on skill's page.
   alexa.resources = languageStrings;
   alexa.registerHandlers(sessionHandlers, confirmModeHandlers, restartModeHandlers, timeModeHandlers);
   alexa.execute();

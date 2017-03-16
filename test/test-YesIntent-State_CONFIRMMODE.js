@@ -4,7 +4,7 @@ module.exports = {
   "session": {
     "sessionId": "",
     "application": {
-      "applicationId": ""
+      "applicationId": config.appId
     },
     "attributes": {
       "speechOutput": config.roomName + " is available. Would you like me to book it for you?", //Change this to change the *last* message used.
