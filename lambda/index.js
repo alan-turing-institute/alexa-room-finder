@@ -294,7 +294,7 @@ const languageStrings = {
 //Main
 exports.handler = (event, context) => {
   const alexa = Alexa.handler(event, context);
-  alexa.APP_ID = APP_ID; //App ID of Alexa skill, found on skill's page.
+  alexa.appId = APP_ID; //App ID of Alexa skill, found on skill's page.
   alexa.resources = languageStrings;
   alexa.registerHandlers(sessionHandlers, confirmModeHandlers, restartModeHandlers);
   alexa.execute();

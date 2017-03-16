@@ -4,7 +4,7 @@ module.exports = {
   "session": {
     "sessionId": "",
     "application": {
-      "applicationId": ""
+      "applicationId": config.appId
     },
     "attributes": {},
     "user": {
