@@ -28,7 +28,7 @@ const states = {
 const sessionHandlers = {
   //Called when Room Booker is opened without being asked to book a room.
   'LaunchRequest': function() {
-    this.attributes.speechOutput = this.t('WELCOME_MESSAGE');
+    this.attributes.speechOutput = this.t('WELCOME_MESSAGE', this.t('BUSINESS_NAME'));
     this.attributes.repromptSpeech = this.t('WELCOME_REPROMPT', this.t('SKILL_NAME'));
     this.emit(':ask', this.attributes.speechOutput, this.attributes.repromptSpeech);
   },
@@ -211,7 +211,7 @@ const timeModeHandlers = Alexa.CreateStateHandler(states.TIMEMODE, {
     this.attributes.endTime = undefined;
     this.attributes.duration = undefined;
 
-    this.attributes.speechOutput = this.t('WELCOME_MESSAGE');
+    this.attributes.speechOutput = this.t('WELCOME_MESSAGE', this.t('BUSINESS_NAME'));
     this.attributes.repromptSpeech = this.t('WELCOME_REPROMPT', this.t('SKILL_NAME'));
     this.emit(':ask', this.attributes.speechOutput, this.attributes.repromptSpeech);
   },
@@ -268,7 +268,7 @@ const confirmModeHandlers = Alexa.CreateStateHandler(states.CONFIRMMODE, {
     this.attributes.startTime = undefined;
     this.attributes.endTime = undefined;
 
-    this.attributes.speechOutput = this.t('WELCOME_MESSAGE');
+    this.attributes.speechOutput = this.t('WELCOME_MESSAGE', this.t('BUSINESS_NAME'));
     this.attributes.repromptSpeech = this.t('WELCOME_REPROMPT', this.t('SKILL_NAME'));
     this.emit(':ask', this.attributes.speechOutput, this.attributes.repromptSpeech);
   },
@@ -286,7 +286,8 @@ const languageStrings = {
   'en-GB': {
     translation: {
       SKILL_NAME: "Room Booker",
-      WELCOME_MESSAGE: "Would you like to book a room at the Turing?",
+      BUSINESS_NAME: "the Turing",
+      WELCOME_MESSAGE: "Would you like to book a room at %s?",
       WELCOME_REPROMPT: "I'm %s. My job is to book you a room! For further instructions, please ask for help.",
       HELP_MESSAGE: "I can book one of the meeting rooms for you. Would you like me to book a room?",
       HELP_REPROMPT: "Would you like me to book a meeting room for you?",
@@ -321,7 +322,8 @@ const languageStrings = {
   'en-US': {
     translation: {
       SKILL_NAME: "Room Booker",
-      WELCOME_MESSAGE: "Would you like to book a room at the Turing?",
+      BUSINESS_NAME: "the Turing",
+      WELCOME_MESSAGE: "Would you like to book a room at %s?",
       WELCOME_REPROMPT: "I'm %s. My job is to book you a room! For further instructions, please ask for help.",
       HELP_MESSAGE: "I can book one of the meeting rooms for you. Would you like me to book a room?",
       HELP_REPROMPT: "Would you like me to book a meeting room for you?",
