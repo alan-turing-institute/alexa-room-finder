@@ -1,6 +1,23 @@
 BookIntent book me a room
 BookIntent book a room
 BookIntent book room
-BookIntent to book a room
+BookIntent book it
+BookIntent book
+BookIntent book rooms
+BookIntent book me rooms
+BookIntent book one
+BookIntent find me a room
+BookIntent find a room
+BookIntent find room
+BookIntent find rooms
+BookIntent find me rooms
+BookIntent find one
+BookIntent get me a room
+BookIntent get a room
+BookIntent get room
+BookIntent get rooms
+BookIntent get me rooms
+BookIntent get one
 
 DurationIntent {Duration}
+DurationIntent for {Duration}
