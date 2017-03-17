@@ -8,7 +8,7 @@ zip -r -X lambda.zip index.js requesters.js node_modules/
 
 aws lambda  create-function \
 --region eu-west-1 \
---function-name MeetingBooker \
+--function-name RoomFinder \
 --zip-file fileb://lambda.zip \
 --role {ARN OF LAMBDA_BASIC_EXECUTION ROLE} \
 --handler index.handler \

@@ -1,12 +1,12 @@
-# Meeting Booker Alexa Skill
+# Room Finder Alexa Skill
 
 A skill built for Amazon's Alexa service, that allows you to book a meeting room at the Turing (or your own business with a little bit of configuration) for up to 2 hours. To get it working, uses simple phrases like:
 
-> Alexa, ask Meeting Booker to book me a room
+> Alexa, ask Room Finder to find me a room
 
 or:
 
-> Alexa, open Meeting Booker
+> Alexa, open Room Finder
 
 followed by:
 
@@ -122,7 +122,7 @@ Lastly, I included a shell script, so if you do install lambda-local globally, y
 
 One of the goals of this project is to automate (or at least put in the command line) as much of the set-up as possible. While AWS CLI provides no support for Alexa Skills, you can use AWS CLI to create and update the Lambda function. The necessary bash commands to do this are found in the `automation` folder, and are detailed below. Once you've edited the shell files to have the correct configuration values, you can run any of the files from the `automation` folder, for the desired effect.
 
-**First you need to install and configure AWS CLI** (Commands below are listed in `automation/configure_aws_cli.sh`)
+**First you need to install and configure AWS CLI** (Commands below are listed in `automation/configure_aws_cli.sh`.)
 
 1. `brew install awscli` (`pip install awscli` will also work, but if you have brew, I suggest using that.)
 2. Run the below commands replacing the {} with access keys. You can get keys by following [these instructions](http://docs.aws.amazon.com/lambda/latest/dg/setting-up.html)
@@ -132,16 +132,16 @@ One of the goals of this project is to automate (or at least put in the command 
   aws configure set default.region eu-west-1
   ```
 
-**Then you need to create the lambda function itself.** (Commands below are listed in `automation/create_lambda.sh`)
+**Then you need to create the lambda function itself** (Commands below are listed in `automation/create_lambda.sh`.)
 
 1. From the `automation` folder, run `cd ../lambda`.
 2. Run `npm install` to install node_modules/, if you haven't already.
 3. Run `zip -r -X lambda.zip index.js requesters.js node_modules/` to recursively compress the deployment package to `lambda.zip`.
 4. Run the below command, replacing {} with the ARN of the role, found in the roles section of AWS.
   ```
-  aws lambda  create-function \
+  aws lambda create-function \
   --region eu-west-1 \
-  --function-name MeetingBooker \
+  --function-name RoomFinder \
   --zip-file fileb://lambda.zip \
   --role {ARN OF LAMBDA_BASIC_EXECUTION ROLE} \
   --handler index.handler \
@@ -149,21 +149,21 @@ One of the goals of this project is to automate (or at least put in the command 
   --profile default
   ```
 
-**Then you'll want to test the function created properly.** (Commands below are listed in `automation/test_lambda.sh`)
+**Then you'll want to test the function created properly** (Commands below are listed in `automation/test_lambda.sh`.)
 
-1. Run `aws lambda list-functions --max-items 10 --profile default` to check that your lambda function is there. It should be called MeetingBooker.
+1. Run `aws lambda list-functions --max-items 10 --profile default` to check that your lambda function is there. It should be called RoomFinder.
 2. Get more information on your lambda function by running the below code.
   ```
   aws lambda get-function \
-  --function-name MeetingBooker \
+  --function-name RoomFinder \
   --region eu-west-1 \
   --profile default
   ```
-3. Test invocation of the function by running the below code, replacing {} with the file path of a JSON to test. You'll need to make your own JSON for now. (You can steal one out of the 'test-[...].js' files used by lambda-local. It's the thing after `module.exports = ...`)
+3. Test invocation of the function by running the below code, replacing {} with the file path of a JSON to test. You'll need to make your own JSON for now. (You can steal one out of the 'test-[...].js' files used by lambda-local, though you'll have to edit its values a bit. It's the thing after `module.exports = ...`)
   ```
   aws lambda invoke \
   --invocation-type RequestResponse \
-  --function-name MeetingBooker \
+  --function-name RoomFinder \
   --region eu-west-1 \
   --log-type Tail \
   --payload fileb://{FILE PATH OF JSON TO TEST} \
@@ -171,13 +171,13 @@ One of the goals of this project is to automate (or at least put in the command 
   outputfile.txt
   ```
 
-**Lastly, you may want to update the lambda function if you've made any changes** (Commands below are listed in `automation/update_lambda.sh`)
+**Lastly, you may want to update the lambda function after you've made any changes** (Commands below are listed in `automation/update_lambda.sh`.)
 
 1. From the `automation` folder, `cd ../lambda`.
-2. Run `zip -r -X lambda.zip index.js requesters.js node_modules/` to compress our updated files to a new deployment package
-3. Run `aws lambda update-function-code --function-name 'MeetingBooker' --zip-file 'fileb://lambda.zip'` to update the code.
+2. Run `zip -r -X lambda.zip index.js requesters.js node_modules/` to compress our updated files to a new deployment package.
+3. Run `aws lambda update-function-code --function-name 'RoomFinder' --zip-file 'fileb://lambda.zip'` to update the code.
 
-## Performing the account link
+## Doing the account link
 
 Before you test properly on the Echo, you'll need to actually perform the link between your accounts. To do this just open the Alexa [web](https://alexa.amazon.co.uk) or mobile app, and navigate to your fresh new skill. Then click Link Accounts, log in, allow the requested permissions, and hopefully have a successful link.
 

@@ -12,7 +12,7 @@ const moment = require('moment');
 const requesters = require('./requesters'); //For making requests to Graph API
 
 //App ID of Alexa skill, found on Alexa Skill Page. Replace this if you're using this independently.
-const APP_ID = '{app-id}';
+const APP_ID = 'amzn1.ask.skill.0f4dbef2-9f5c-4fd7-bfbf-8de6b96a95a5';
 
 //Names of all calendars to be looked for as rooms.
 const testNames = ['alexaroom1', 'alexaroom2'];
@@ -26,7 +26,7 @@ const states = {
 
 //The set of handlers used for the overall session, but mostly to initiate a new session.
 const sessionHandlers = {
-  //Called when Room Booker is opened without being asked to book a room.
+  //Called when skill is opened without being asked to book a room.
   'LaunchRequest': function() {
     this.attributes.speechOutput = this.t('WELCOME_MESSAGE', this.t('BUSINESS_NAME'));
     this.attributes.repromptSpeech = this.t('WELCOME_REPROMPT', this.t('SKILL_NAME'));
@@ -56,7 +56,7 @@ const sessionHandlers = {
   'AMAZON.YesIntent': function() {
     this.emit('BookIntent');
   },
-  //Does the key booking function. This is intended to work from a LaunchRequest - i.e. "Ask room booker to book me a room."
+  //Does the key booking function. This is intended to work from a LaunchRequest - i.e. "Ask Room Finder to book me a room."
   'BookIntent': function() {
     this.handler.state = states.TIMEMODE;
     this.attributes.speechOutput = this.t("TIME_DURATION_MESSAGE");
@@ -101,7 +101,7 @@ const restartModeHandlers = Alexa.CreateStateHandler(states.RESTARTMODE, {
   'AMAZON.YesIntent': function() {
     this.emitWithState('BookIntent');
   },
-  //Does the key booking function. This is intended to work from a LaunchRequest - i.e. "Ask room booker to book me a room."
+  //Does the key booking function. This is intended to work from a LaunchRequest - i.e. "Ask Room Finder to book me a room."
   'BookIntent': function() {
     this.handler.state = states.TIMEMODE;
     this.attributes.speechOutput = this.t("TIME_DURATION_MESSAGE");
@@ -289,13 +289,13 @@ const confirmModeHandlers = Alexa.CreateStateHandler(states.CONFIRMMODE, {
 const languageStrings = {
   'en-GB': {
     translation: {
-      SKILL_NAME: "Meeting Booker",
+      SKILL_NAME: "Room Finder",
       BUSINESS_NAME: "the Alan Turing Institute",
-      WELCOME_MESSAGE: "Would you like to book a meeting at %s?",
-      WELCOME_REPROMPT: "I'm %s. My job is to book meetings! If you need further instructions, just ask me for help.",
+      WELCOME_MESSAGE: "Would you like to book a meeting room at %s?",
+      WELCOME_REPROMPT: "I'm %s. My job is to book meeting rooms! If you need further instructions, just ask me for help.",
       HELP_MESSAGE: "I hunt through all the meeting rooms here, see if one is available for a specified length of time, then I book it for you! Would you like me to book you a meeting?",
       HELP_REPROMPT: "Would you like me to book a meeting for you?",
-      UNHANDLED_MESSAGE: "Sorry, I didn't get that. Would you like me to book a meeting?",
+      UNHANDLED_MESSAGE: "Sorry, I didn't get that. Would you like me to book a meeting room?",
       UNHANDLED_REPROMPT: "Say something like 'book me a meeting' or 'yes' if you'd like to book a meeting.",
       ROOM_AVAILABLE_MESSAGE: "%s is available. Would you like me to book it for you?",
       ROOM_AVAILABLE_REPROMPT: "Would you like me to book %s for you?",
@@ -327,13 +327,13 @@ const languageStrings = {
   },
   'en-US': {
     translation: {
-      SKILL_NAME: "Meeting Booker",
+      SKILL_NAME: "Room Finder",
       BUSINESS_NAME: "the Alan Turing Institute",
-      WELCOME_MESSAGE: "Would you like to book a meeting at %s?",
-      WELCOME_REPROMPT: "I'm %s. My job is to book meetings! If you need further instructions, just ask me for help.",
+      WELCOME_MESSAGE: "Would you like to book a meeting room at %s?",
+      WELCOME_REPROMPT: "I'm %s. My job is to book meeting rooms! If you need further instructions, just ask me for help.",
       HELP_MESSAGE: "I hunt through all the meeting rooms here, see if one is available for a specified length of time, then I book it for you! Would you like me to book you a meeting?",
       HELP_REPROMPT: "Would you like me to book a meeting for you?",
-      UNHANDLED_MESSAGE: "Sorry, I didn't get that. Would you like me to book a meeting?",
+      UNHANDLED_MESSAGE: "Sorry, I didn't get that. Would you like me to book a meeting room?",
       UNHANDLED_REPROMPT: "Say something like 'book me a meeting' or 'yes' if you'd like to book a meeting.",
       ROOM_AVAILABLE_MESSAGE: "%s is available. Would you like me to book it for you?",
       ROOM_AVAILABLE_REPROMPT: "Would you like me to book %s for you?",
