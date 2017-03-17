@@ -12,7 +12,7 @@ const moment = require('moment');
 const requesters = require('./requesters'); //For making requests to Graph API
 
 //App ID of Alexa skill, found on Alexa Skill Page. Replace this if you're using this independently.
-const APP_ID = 'amzn1.ask.skill.0f4dbef2-9f5c-4fd7-bfbf-8de6b96a95a5';
+const APP_ID = '{app-id}';
 
 //Names of all calendars to be looked for as rooms.
 const testNames = ['alexaroom1', 'alexaroom2'];
