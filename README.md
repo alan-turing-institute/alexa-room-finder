@@ -1,18 +1,18 @@
-# Room Booker Alexa Skill
+# Meeting Booker Alexa Skill
 
-A skill built for Amazon's Alexa service, that allows you to book a room at the Turing (or your own business with a little bit of configuration) for half-an-hour. Currently it handles simple phrases like:
+A skill built for Amazon's Alexa service, that allows you to book a meeting room at the Turing (or your own business with a little bit of configuration) for up to 2 hours. To get it working, uses simple phrases like:
 
-> Alexa, ask Room Booker to book me a room
+> Alexa, ask Meeting Booker to book me a room
 
 or:
 
-> Alexa, open Room Booker
+> Alexa, open Meeting Booker
 
 followed by:
 
-> Book me a room
+> Book a meeting room
 
-It will then find you a room that is free (from a given list), and confirm whether you want to book it. It also has plenty of help, repeat, start-over and cancel functions.
+It will then find ask you how long you want it for, find you a room that is free (from a given list), and confirm whether you want to book it. It also has plenty of help, repeat, start-over and cancel functions.
 
 ## Brief intro to Alexa skills
 
@@ -117,6 +117,65 @@ module.exports = {
 If you install lambda-local globally (`sudo npm install -g lambda-local`), you can also test from the console using this command: `lambda-local -l lambda/index.js -h handler -e test/filename.js` where filename is the JSON request you want to test. I've created test JSONs for all of the available intents. The most important intent to test is the BookIntent from every state, as that is the only intent that directly accesses the Office API.
 
 Lastly, I included a shell script, so if you do install lambda-local globally, you can just run that using `bash run_tests.sh`; this will test every possible intent, and is probably the quickest way to check that everything is running before deployment. If you get any errors, then you need to worry. Don't be surprised at a couple 'Unhandled' responses though - those are meant to happen if you ask the skill to 'Start Over' from the beginning!
+
+## Automating Lambda Function Creation and Configuration
+
+One of the goals of this project is to automate (or at least put in the command line) as much of the set-up as possible. While AWS CLI provides no support for Alexa Skills, you can use AWS CLI to create and update the Lambda function. The necessary bash commands to do this are found in the `automation` folder, and are detailed below. Once you've edited the shell files to have the correct configuration values, you can run any of the files from the `automation` folder, for the desired effect.
+
+**First you need to install and configure AWS CLI** (Commands below are listed in `automation/configure_aws_cli.sh`)
+
+1. `brew install awscli` (`pip install awscli` will also work, but if you have brew, I suggest using that.)
+2. Run the below commands replacing the {} with access keys. You can get keys by following [these instructions](http://docs.aws.amazon.com/lambda/latest/dg/setting-up.html)
+  ```
+  aws configure set aws_access_key_id {AWS KEY}
+  aws configure set aws_secret_access_key {AWS SECRET}
+  aws configure set default.region eu-west-1
+  ```
+
+**Then you need to create the lambda function itself.** (Commands below are listed in `automation/create_lambda.sh`)
+
+1. From the `automation` folder, run `cd ../lambda`.
+2. Run `npm install` to install node_modules/, if you haven't already.
+3. Run `zip -r -X lambda.zip index.js requesters.js node_modules/` to recursively compress the deployment package to `lambda.zip`.
+4. Run the below command, replacing {} with the ARN of the role, found in the roles section of AWS.
+  ```
+  aws lambda  create-function \
+  --region eu-west-1 \
+  --function-name MeetingBooker \
+  --zip-file fileb://lambda.zip \
+  --role {ARN OF LAMBDA_BASIC_EXECUTION ROLE} \
+  --handler index.handler \
+  --runtime nodejs4.3 \
+  --profile default
+  ```
+
+**Then you'll want to test the function created properly.** (Commands below are listed in `automation/test_lambda.sh`)
+
+1. Run `aws lambda list-functions --max-items 10 --profile default` to check that your lambda function is there. It should be called MeetingBooker.
+2. Get more information on your lambda function by running the below code.
+  ```
+  aws lambda get-function \
+  --function-name MeetingBooker \
+  --region eu-west-1 \
+  --profile default
+  ```
+3. Test invocation of the function by running the below code, replacing {} with the file path of a JSON to test. You'll need to make your own JSON for now. (You can steal one out of the 'test-[...].js' files used by lambda-local. It's the thing after `module.exports = ...`)
+  ```
+  aws lambda invoke \
+  --invocation-type RequestResponse \
+  --function-name MeetingBooker \
+  --region eu-west-1 \
+  --log-type Tail \
+  --payload fileb://{FILE PATH OF JSON TO TEST} \
+  --profile default \
+  outputfile.txt
+  ```
+
+**Lastly, you may want to update the lambda function if you've made any changes** (Commands below are listed in `automation/update_lambda.sh`)
+
+1. From the `automation` folder, `cd ../lambda`.
+2. Run `zip -r -X lambda.zip index.js requesters.js node_modules/` to compress our updated files to a new deployment package
+3. Run `aws lambda update-function-code --function-name 'MeetingBooker' --zip-file 'fileb://lambda.zip'` to update the code.
 
 ## Performing the account link
 

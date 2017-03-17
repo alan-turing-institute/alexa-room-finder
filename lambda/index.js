@@ -190,10 +190,12 @@ const timeModeHandlers = Alexa.CreateStateHandler(states.TIMEMODE, {
               that.emit(':ask', that.attributes.speechOutput, that.attributes.repromptSpeech);
             }
           }, function(roomError) {
-            that.emit(':tell', that.t('ROOM_ERROR', roomError));
+            that.emit(':tellWithCard', that.t('ROOM_ERROR'), that.t('ROOM_ERROR_CARD_TITLE'), roomError);
+            console.error("\n Room Error: " + roomError);
           });
         }, function(calError) {
-          that.emit(':tell', that.t('CALENDAR_ERROR', calError));
+          that.emit(':tellWithCard', that.t('CALENDAR_ERROR'), that.t('CALENDAR_ERROR_CARD_TITLE'), calError);
+          console.error("\n Calendar Error: " + calError);
         });
       }
     } else {
@@ -257,11 +259,13 @@ const confirmModeHandlers = Alexa.CreateStateHandler(states.CONFIRMMODE, {
     requesters.postRoom(this.event.session.user.accessToken, this.attributes.ownerAddress, this.attributes.ownerName, this.attributes.startTime, this.attributes.endTime).then(function(owner) {
       that.emit(':tellWithCard', that.t('ROOM_BOOKED', that.attributes.ownerName, that.attributes.duration), that.t('CARD_ROOM_BOOKED_TITLE', that.attributes.ownerName), that.t('CARD_ROOM_BOOKED_CONTENT', that.attributes.ownerName, that.attributes.duration));
     }, function(bookError) {
-      that.emit(':tell', that.t('BOOKING_ERROR', bookError));
+      that.emit(':tellWithCard', that.t('BOOKING_ERROR'), that.t('BOOKING_ERROR_CARD_TITLE'), bookError);
+      console.error('Posting Error: ' + bookError);
     });
   },
   'AMAZON.StartOverIntent':function() {
     this.handler.state = states.RESTARTMODE;
+
     this.attributes.ownerAddress = undefined;
     this.attributes.ownerName = undefined;
     this.attributes.roomName = undefined;
@@ -285,73 +289,77 @@ const confirmModeHandlers = Alexa.CreateStateHandler(states.CONFIRMMODE, {
 const languageStrings = {
   'en-GB': {
     translation: {
-      SKILL_NAME: "Room Booker",
-      BUSINESS_NAME: "the Turing",
-      WELCOME_MESSAGE: "Would you like to book a room at %s?",
-      WELCOME_REPROMPT: "I'm %s. My job is to book you a room! For further instructions, please ask for help.",
-      HELP_MESSAGE: "I can book one of the meeting rooms for you. Would you like me to book a room?",
-      HELP_REPROMPT: "Would you like me to book a meeting room for you?",
-      UNHANDLED_MESSAGE: "Sorry, I didn't get that. Would you like me to book a room?",
-      UNHANDLED_REPROMPT: "I can book meeting rooms for you. Why don't you book a room?",
+      SKILL_NAME: "Meeting Booker",
+      BUSINESS_NAME: "the Alan Turing Institute",
+      WELCOME_MESSAGE: "Would you like to book a meeting at %s?",
+      WELCOME_REPROMPT: "I'm %s. My job is to book meetings! If you need further instructions, just ask me for help.",
+      HELP_MESSAGE: "I hunt through all the meeting rooms here, see if one is available for a specified length of time, then I book it for you! Would you like me to book you a meeting?",
+      HELP_REPROMPT: "Would you like me to book a meeting for you?",
+      UNHANDLED_MESSAGE: "Sorry, I didn't get that. Would you like me to book a meeting?",
+      UNHANDLED_REPROMPT: "Say something like 'book me a meeting' or 'yes' if you'd like to book a meeting.",
       ROOM_AVAILABLE_MESSAGE: "%s is available. Would you like me to book it for you?",
       ROOM_AVAILABLE_REPROMPT: "Would you like me to book %s for you?",
-      ROOM_UNAVAILABLE_MESSAGE: "Sorry, no rooms are available right now. Maybe try again later!",
-      ROOM_BOOKED: "Great. I have booked %s for %s minutes.",
+      ROOM_BOOKED: "Great. I've booked %s for %s minutes.",
       CARD_ROOM_BOOKED_TITLE: "%s booked.",
       CARD_ROOM_BOOKED_CONTENT: "I've booked %s for %s minutes.",
-      BOOKING_HELP_MESSAGE: "I checked the rooms, and %s is available. Say yes if you'd like to book it.",
-      BOOKING_HELP_REPROMPT: "Say yes if you want to book %s, or no if you don't.",
-      BOOKING_UNHANDLED_MESSAGE: "Sorry, I didn't get that. Did you want that room?",
-      BOOKING_UNHANDLED_REPROMPT: "Please confirm if you want that room I found. Bye!",
-      TIME_UNHANDLED_MESSAGE: "Sorry, I didn't get that. How long do you need a room for?",
-      TIME_UNHANDLED_REPROMPT: "How long do you want a room for?",
-      TIME_HELP_MESSAGE: "Please tell me how long you'd like a room for. The maximum is 2 hours, but you can say any duration under that.",
-      TIME_HELP_REPROMPT: "Tell me how long you'd like a room for, or say 'cancel' or 'stop' to quit.",
-      TIME_DURATION_MESSAGE: "How long would you like to book the room for?",
-      TIME_DURATION_REPROMPT: "Please tell me how long you'd like the room for. The maximum is 2 hours.",
-      TIME_UNAVAILABLE_MESSAGE: "Sorry, no rooms were available for %s minutes. Maybe give me a shorter time, or say cancel if you're done.",
-      TIME_UNAVAILABLE_REPROMPT: "No rooms were available for %s minutes. Please give me a shorter time, or say cancel if you're done.",
-      TIME_TOO_LONG_MESSAGE: "Sorry, I can only book meeting rooms for 2 hours. Please tell me a shorter time.",
-      TIME_TOO_LONG_REPROMPT: "Please give me a time shorter than 2 hours, and I'll try to find you a room.",
-      CALENDAR_ERROR: "There was an error retrieving calendars: %s",
-      ROOM_ERROR: "There was an error retrieving a free room: %s",
-      BOOKING_ERROR: "There was an error booking the room: %s",
+      BOOKING_HELP_MESSAGE: "I checked all the meeting rooms for you, and %s is available. Do you want me to book it for you?",
+      BOOKING_HELP_REPROMPT: "Say 'yes', or something like 'book it' if you want to book %s, or say 'no' or 'cancel' if you don't.",
+      BOOKING_UNHANDLED_MESSAGE: "Sorry, I didn't get that. Do you want to book that meeting?",
+      BOOKING_UNHANDLED_REPROMPT: "Please confirm whether you want to book the meeting room I found.",
+      TIME_UNHANDLED_MESSAGE: "Sorry, I didn't get that. How long do you want the meeting to be?",
+      TIME_UNHANDLED_REPROMPT: "How long do you want the meeting room for?",
+      TIME_HELP_MESSAGE: "Please tell me how long you'd like the meeting to be. The maximum is 2 hours, but you can say any duration under that.",
+      TIME_HELP_REPROMPT: "Please tell me how long you'd like the meeting to be, or just say 'cancel' or 'stop' to quit.",
+      TIME_DURATION_MESSAGE: "How long would you like the meeting to be?",
+      TIME_DURATION_REPROMPT: "Please tell me how long you'd like the meeting to be. The maximum is 2 hours.",
+      TIME_UNAVAILABLE_MESSAGE: "Sorry, no rooms were available for a %s minute meeting. Maybe give a shorter time, or say 'cancel' if you're done.",
+      TIME_UNAVAILABLE_REPROMPT: "No rooms were available for a %s minute meeting. You can give a shorter time, or say 'cancel' if you're done.",
+      TIME_TOO_LONG_MESSAGE: "Sorry, I can only book meetings for up to 2 hours. Please give a shorter time.",
+      TIME_TOO_LONG_REPROMPT: "Please give me a time shorter than 2 hours, and I'll try to book you a meeting.",
+      CALENDAR_ERROR: "There was an error retrieving calendars. Tom has been informed and is looking into it!",
+      CALENDAR_ERROR_CARD_TITLE: "Calendar Error",
+      ROOM_ERROR: "There was an error retrieving a free room. Tom has been informed and is looking into it!",
+      ROOM_ERROR_CARD_TITLE: "Room Error",
+      BOOKING_ERROR: "There was an error booking the room. Tom has been informed and is looking into it!",
+      BOOKING_ERROR_CARD_TITLE: "Booking Error",
       STOP_MESSAGE: "Alright. Goodbye!"
     },
   },
   'en-US': {
     translation: {
-      SKILL_NAME: "Room Booker",
-      BUSINESS_NAME: "the Turing",
-      WELCOME_MESSAGE: "Would you like to book a room at %s?",
-      WELCOME_REPROMPT: "I'm %s. My job is to book you a room! For further instructions, please ask for help.",
-      HELP_MESSAGE: "I can book one of the meeting rooms for you. Would you like me to book a room?",
-      HELP_REPROMPT: "Would you like me to book a meeting room for you?",
-      UNHANDLED_MESSAGE: "Sorry, I didn't get that. Would you like me to book a room?",
-      UNHANDLED_REPROMPT: "I can book meeting rooms for you. Why don't you book a room?",
+      SKILL_NAME: "Meeting Booker",
+      BUSINESS_NAME: "the Alan Turing Institute",
+      WELCOME_MESSAGE: "Would you like to book a meeting at %s?",
+      WELCOME_REPROMPT: "I'm %s. My job is to book meetings! If you need further instructions, just ask me for help.",
+      HELP_MESSAGE: "I hunt through all the meeting rooms here, see if one is available for a specified length of time, then I book it for you! Would you like me to book you a meeting?",
+      HELP_REPROMPT: "Would you like me to book a meeting for you?",
+      UNHANDLED_MESSAGE: "Sorry, I didn't get that. Would you like me to book a meeting?",
+      UNHANDLED_REPROMPT: "Say something like 'book me a meeting' or 'yes' if you'd like to book a meeting.",
       ROOM_AVAILABLE_MESSAGE: "%s is available. Would you like me to book it for you?",
       ROOM_AVAILABLE_REPROMPT: "Would you like me to book %s for you?",
-      ROOM_UNAVAILABLE_MESSAGE: "Sorry, no rooms are available right now. Maybe try again later!",
-      ROOM_BOOKED: "Great. I have booked %s for %s minutes.",
+      ROOM_BOOKED: "Great. I've booked %s for %s minutes.",
       CARD_ROOM_BOOKED_TITLE: "%s booked.",
       CARD_ROOM_BOOKED_CONTENT: "I've booked %s for %s minutes.",
-      BOOKING_HELP_MESSAGE: "I checked the rooms, and %s is available. Say yes if you'd like to book it.",
-      BOOKING_HELP_REPROMPT: "Say yes if you want to book %s, or no if you don't.",
-      BOOKING_UNHANDLED_MESSAGE: "Sorry, I didn't get that. Did you want that room?",
-      BOOKING_UNHANDLED_REPROMPT: "Please confirm if you want that room I found. Bye!",
-      TIME_UNHANDLED_MESSAGE: "Sorry, I didn't get that. How long do you need a room for?",
-      TIME_UNHANDLED_REPROMPT: "How long do you want a room for?",
-      TIME_HELP_MESSAGE: "Please tell me how long you'd like a room for. The maximum is 2 hours, but you can say any duration under that.",
-      TIME_HELP_REPROMPT: "Tell me how long you'd like a room for, or say 'cancel' or 'stop' to quit.",
-      TIME_DURATION_MESSAGE: "How long would you like to book the room for?",
-      TIME_DURATION_REPROMPT: "Please tell me how long you'd like the room for. The maximum is 2 hours.",
-      TIME_UNAVAILABLE_MESSAGE: "Sorry, no rooms were available for %s minutes. Maybe give me a shorter time, or say cancel if you're done.",
-      TIME_UNAVAILABLE_REPROMPT: "No rooms were available for %s minutes. Please give me a shorter time, or say cancel if you're done.",
-      TIME_TOO_LONG_MESSAGE: "Sorry, I can only book meeting rooms for 2 hours. Please tell me a shorter time.",
-      TIME_TOO_LONG_REPROMPT: "Please give me a time shorter than 2 hours, and I'll try to find you a room.",
-      CALENDAR_ERROR: "There was an error retrieving calendars: %s",
-      ROOM_ERROR: "There was an error retrieving a free room: %s",
-      BOOKING_ERROR: "There was an error booking the room: %s",
+      BOOKING_HELP_MESSAGE: "I checked all the meeting rooms for you, and %s is available. Do you want me to book it for you?",
+      BOOKING_HELP_REPROMPT: "Say 'yes', or something like 'book it' if you want to book %s, or say 'no' or 'cancel' if you don't.",
+      BOOKING_UNHANDLED_MESSAGE: "Sorry, I didn't get that. Do you want to book that meeting?",
+      BOOKING_UNHANDLED_REPROMPT: "Please confirm whether you want to book the meeting room I found.",
+      TIME_UNHANDLED_MESSAGE: "Sorry, I didn't get that. How long do you want the meeting to be?",
+      TIME_UNHANDLED_REPROMPT: "How long do you want the meeting room for?",
+      TIME_HELP_MESSAGE: "Please tell me how long you'd like the meeting to be. The maximum is 2 hours, but you can say any duration under that.",
+      TIME_HELP_REPROMPT: "Please tell me how long you'd like the meeting to be, or just say 'cancel' or 'stop' to quit.",
+      TIME_DURATION_MESSAGE: "How long would you like the meeting to be?",
+      TIME_DURATION_REPROMPT: "Please tell me how long you'd like the meeting to be. The maximum is 2 hours.",
+      TIME_UNAVAILABLE_MESSAGE: "Sorry, no rooms were available for a %s minute meeting. Maybe give a shorter time, or say 'cancel' if you're done.",
+      TIME_UNAVAILABLE_REPROMPT: "No rooms were available for a %s minute meeting. You can give a shorter time, or say 'cancel' if you're done.",
+      TIME_TOO_LONG_MESSAGE: "Sorry, I can only book meetings for up to 2 hours. Please give a shorter time.",
+      TIME_TOO_LONG_REPROMPT: "Please give me a time shorter than 2 hours, and I'll try to book you a meeting.",
+      CALENDAR_ERROR: "There was an error retrieving calendars. Tom has been informed and is looking into it!",
+      CALENDAR_ERROR_CARD_TITLE: "Calendar Error",
+      ROOM_ERROR: "There was an error retrieving a free room. Tom has been informed and is looking into it!",
+      ROOM_ERROR_CARD_TITLE: "Room Error",
+      BOOKING_ERROR: "There was an error booking the room. Tom has been informed and is looking into it!",
+      BOOKING_ERROR_CARD_TITLE: "Booking Error",
       STOP_MESSAGE: "Alright. Goodbye!"
     },
   }
