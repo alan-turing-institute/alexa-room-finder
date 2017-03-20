@@ -15,7 +15,7 @@ const requesters = require('./requesters'); //For making requests to Graph API
 const APP_ID = '{app-id}';
 
 //Names of all calendars to be looked for as rooms.
-const testNames = ['alexaroom1', 'alexaroom2'];
+const testNames = ['Meeting Room 1.0', 'Meeting Room 1.4', 'Meeting Room 1.5', 'Meeting Room 1.6', 'Meeting Room 1.7'];
 
 //Object of all states to be used by the code.
 const states = {
@@ -290,7 +290,7 @@ const languageStrings = {
   'en-GB': {
     translation: {
       SKILL_NAME: "Room Finder",
-      BUSINESS_NAME: "the Alan Turing Institute",
+      BUSINESS_NAME: "the Turing",
       WELCOME_MESSAGE: "Would you like to book a meeting room at %s?",
       WELCOME_REPROMPT: "I'm %s. My job is to book meeting rooms! If you need further instructions, just ask me for help.",
       HELP_MESSAGE: "I hunt through all the meeting rooms here, see if one is available for a specified length of time, then I book it for you! Would you like me to book you a meeting?",
@@ -328,7 +328,7 @@ const languageStrings = {
   'en-US': {
     translation: {
       SKILL_NAME: "Room Finder",
-      BUSINESS_NAME: "the Alan Turing Institute",
+      BUSINESS_NAME: "the Turing",
       WELCOME_MESSAGE: "Would you like to book a meeting room at %s?",
       WELCOME_REPROMPT: "I'm %s. My job is to book meeting rooms! If you need further instructions, just ask me for help.",
       HELP_MESSAGE: "I hunt through all the meeting rooms here, see if one is available for a specified length of time, then I book it for you! Would you like me to book you a meeting?",
