@@ -74,6 +74,8 @@ Sorry, you'll then have to repeat these steps for every other calendar you inten
 
 The skill handling is built to be hosted on Amazon Web Services' [Lambda](https://aws.amazon.com/lambda/).
 
+**This section shows how to upload the function by GUI. If you want to do it from the command line, see "Automating Lambda Function creation and configuration."**
+
 In order to make a function in Lambda:
 * Open the Lambda console. If you're in Europe make sure your region is set to EU Ireland (eu-west-1) as this is the only supported European region for Alexa Skills Kit.
 * Click 'Create a Lambda function'
@@ -125,29 +127,37 @@ One of the goals of this project is to automate (or at least put in the command 
 **First you need to install and configure AWS CLI** (Commands below are listed in `automation/configure_aws_cli.sh`.)
 
 1. `brew install awscli` (`pip install awscli` will also work, but if you have brew, I suggest using that.)
-2. Run the below commands replacing the {} with access keys. You can get keys by following [these instructions](http://docs.aws.amazon.com/lambda/latest/dg/setting-up.html)
+2. Run the below commands replacing the {} with access keys. You can get keys by following [these instructions.](http://docs.aws.amazon.com/lambda/latest/dg/setting-up.html)
   ```
   aws configure set aws_access_key_id {AWS KEY}
   aws configure set aws_secret_access_key {AWS SECRET}
   aws configure set default.region eu-west-1
   ```
 
+**Then you may have to create a 'lambda_basic_execution'-type role for the lambda function. You don't need to do this if you already have a lambda_basic_execution role.** (Commands below are listed in `automation/create_role.sh`)
+
+1. From the automation folder, run `aws iam create-role --role-name room_finder_basic_execution --assume-role-policy-document file://role-policy-document.json`. This creates a role named 'room_finder_basic_execution'.
+2. Run `aws iam put-role-policy --role-name room_finder_basic_execution --policy-name lambda_basic_execution --policy-document file://basic-execution-role.json`. This attaches a very basic policy to the role. This policy has very limited permissions, so you may want to add more if you want to complicate your skill.
+3. Run `aws iam get-role --role-name room_finder_basic_execution` to check the role created. From the object this returns, note down the "Arn" field as you'll need it in the next step.
+
 **Then you need to create the lambda function itself** (Commands below are listed in `automation/create_lambda.sh`.)
 
 1. From the `automation` folder, run `cd ../lambda`.
 2. Run `npm install` to install node_modules/, if you haven't already.
 3. Run `zip -r -X lambda.zip index.js requesters.js node_modules/` to recursively compress the deployment package to `lambda.zip`.
-4. Run the below command, replacing {} with the ARN of the role, found in the roles section of AWS.
+4. Run the below command, replacing {} with the ARN of the role. This can be found by running `aws iam get-role --role-name room_finder_basic_execution`, or in the Roles section of AWS IAM.
   ```
   aws lambda create-function \
   --region eu-west-1 \
   --function-name RoomFinder \
   --zip-file fileb://lambda.zip \
-  --role {ARN OF LAMBDA_BASIC_EXECUTION ROLE} \
+  --role {ARN OF ROOM_FINDER_BASIC_EXECUTION ROLE} \
   --handler index.handler \
   --runtime nodejs4.3 \
   --profile default
   ```
+
+*NB: I've not yet figured out whether it's possible to add Alexa Skills Kit as a trigger from AWS CLI, or whether you even need to have the trigger present. If stuff doesn't work, make sure that Alexa Skills Kit is a trigger from the Lambda web app.*
 
 **Then you'll want to test the function created properly** (Commands below are listed in `automation/test_lambda.sh`.)
 
@@ -166,7 +176,7 @@ One of the goals of this project is to automate (or at least put in the command 
   --function-name RoomFinder \
   --region eu-west-1 \
   --log-type Tail \
-  --payload fileb://{FILE PATH OF JSON TO TEST} \
+  --payload file://{FILE PATH OF JSON TO TEST} \
   --profile default \
   outputfile.txt
   ```
