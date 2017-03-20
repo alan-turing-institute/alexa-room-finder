@@ -1,7 +1,5 @@
-# aws iam create-role --role-name test_basic_execution --assume-role-policy-document file://role-policy-document.json
-#
-# aws iam put-role-policy --role-name test_basic_execution --policy-name lambda_basic_execution --policy-document file://basic-execution-role.json
+aws iam create-role --role-name room_finder_basic_execution --assume-role-policy-document file://role-policy-document.json
 
-ROLE= aws iam get-role --role-name test_basic_execution
+aws iam put-role-policy --role-name room_finder_basic_execution --policy-name lambda_basic_execution --policy-document file://basic-execution-role.json
 
-# echo $ROLE
+aws iam get-role --role-name room_finder_basic_execution
