@@ -145,7 +145,7 @@ One of the goals of this project is to automate (or at least put in the command 
 1. From the `automation` folder, run `cd ../lambda`.
 2. Run `npm install` to install node_modules/, if you haven't already.
 3. Run `zip -r -X lambda.zip index.js requesters.js node_modules/` to recursively compress the deployment package to `lambda.zip`.
-4. Run the below command, replacing {} with the ARN of the role. This can be found by running `aws iam get-role --role-name room_finder_basic_execution`, or in the Roles section of AWS IAM.
+4. Run the below command to create the function, replacing {} with the ARN of the role. This can be found by running `aws iam get-role --role-name room_finder_basic_execution`, or in the Roles section of AWS IAM.
   ```
   aws lambda create-function \
   --region eu-west-1 \
@@ -156,8 +156,15 @@ One of the goals of this project is to automate (or at least put in the command 
   --runtime nodejs4.3 \
   --profile default
   ```
-
-*NB: I've not yet figured out whether it's possible to add Alexa Skills Kit as a trigger from AWS CLI, or whether you even need to have the trigger present. If stuff doesn't work, make sure that Alexa Skills Kit is a trigger from the Lambda web app.*
+5. Run the below command to add the Alexa Skills Kit trigger/permission to the new RoomFinder lambda function. You may want to replace "1234" with a unique identifier of your own.
+  ```
+  aws lambda add-permission \
+  --function-name RoomFinder \
+  --statement-id "1234" \
+  --action "lambda:InvokeFunction" \
+  --principal "alexa-appkit.amazon.com"  \
+  --region eu-west-1
+  ```
 
 **Then you'll want to test the function created properly** (Commands below are listed in `automation/test_lambda.sh`.)
 

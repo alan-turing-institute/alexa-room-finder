@@ -14,3 +14,10 @@ aws lambda  create-function \
 --handler index.handler \
 --runtime nodejs4.3 \
 --profile default
+
+aws lambda add-permission \
+--function-name RoomFinder \
+--statement-id "1234" \
+--action "lambda:InvokeFunction" \
+--principal "alexa-appkit.amazon.com"  \
+--region eu-west-1
