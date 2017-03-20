@@ -74,7 +74,7 @@ Sorry, you'll then have to repeat these steps for every other calendar you inten
 
 The skill handling is built to be hosted on Amazon Web Services' [Lambda](https://aws.amazon.com/lambda/).
 
-**This section shows how to upload the function by GUI. If you want to do it from the command line, see "Automating Lambda Function creation and configuration."**
+**This section shows how to upload the function by the web app, a GUI. If you want to do it from the command line, see "Automating Lambda Function creation and configuration."**
 
 In order to make a function in Lambda:
 * Open the Lambda console. If you're in Europe make sure your region is set to EU Ireland (eu-west-1) as this is the only supported European region for Alexa Skills Kit.
