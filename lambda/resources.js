@@ -32,10 +32,8 @@ const languageStrings = {
       TIME_UNAVAILABLE_REPROMPT: "No rooms were available for a %s minute meeting. You can give a shorter time, or say 'cancel' if you're done.",
       TIME_TOO_LONG_MESSAGE: "Sorry, I can only book meetings for up to 2 hours. Please give a shorter time.",
       TIME_TOO_LONG_REPROMPT: "Please give me a time shorter than 2 hours, and I'll try to book you a meeting.",
-      ROOM_ERROR: "There was an error retrieving a free room. Tom has been informed and is looking into it!",
-      ROOM_ERROR_CARD_TITLE: "Room Error",
-      BOOKING_ERROR: "There was an error booking the room. Tom has been informed and is looking into it!",
-      BOOKING_ERROR_CARD_TITLE: "Booking Error",
+      ERROR: "There was an error. Tom - the intern who made this - has been notified.",
+      ERROR_CARD_TITLE: "Error occurred",
       STOP_MESSAGE: "Alright. Goodbye!"
     },
   },
@@ -68,10 +66,8 @@ const languageStrings = {
       TIME_UNAVAILABLE_REPROMPT: "No rooms were available for a %s minute meeting. You can give a shorter time, or say 'cancel' if you're done.",
       TIME_TOO_LONG_MESSAGE: "Sorry, I can only book meetings for up to 2 hours. Please give a shorter time.",
       TIME_TOO_LONG_REPROMPT: "Please give me a time shorter than 2 hours, and I'll try to book you a meeting.",
-      ROOM_ERROR: "There was an error retrieving a free room. Tom has been informed and is looking into it!",
-      ROOM_ERROR_CARD_TITLE: "Room Error",
-      BOOKING_ERROR: "There was an error booking the room. Tom has been informed and is looking into it!",
-      BOOKING_ERROR_CARD_TITLE: "Booking Error",
+      ERROR: "There was an error. Tom - the intern who made this - has been notified.",
+      ERROR_CARD_TITLE: "Error occurred",
       STOP_MESSAGE: "Alright. Goodbye!"
     },
   }
