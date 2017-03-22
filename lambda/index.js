@@ -9,7 +9,6 @@
 
 const Alexa = require('alexa-sdk');
 const moment = require('moment');
-const Q = require('q');
 const requesters = require('./requesters')
 const config = require('./config');
 const resources = require('./resources');
