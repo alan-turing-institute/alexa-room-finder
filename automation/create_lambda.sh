@@ -4,7 +4,7 @@ cd ../lambda
 
 npm install
 
-zip -r -X lambda.zip index.js requesters.js node_modules/
+zip -r -X lambda.zip index.js requesters.js resources.js config.js node_modules/
 
 aws lambda create-function \
 --region eu-west-1 \

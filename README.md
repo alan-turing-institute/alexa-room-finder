@@ -52,7 +52,7 @@ In order to set up the account linking part of this model, I'd suggest opening t
 * In the Microsoft Portal, click 'generate new password'. Save the secret it gives you somewhere secure as you won't be able to see it again. Then copy it over to the 'Client Secret' section of Alexa.
 * In the Microsoft Portal, add one 'Delegated Permission': `Calendars.ReadWrite`.
 * In Alexa, change the Client Authentication Scheme to 'Credentials in request body'. It won't work with http basic, so this is crucial.
-* Lastly, in both Alexa and Microsoft, add a privacy policy URL. I'll might or might not keep 'http://tomknowl.es/privacypolicy.html' updated as a place-holder, but you should make your own.
+* Lastly, in both Alexa and Microsoft, add a privacy policy URL. I might or might not keep 'http://tomknowl.es/privacypolicy.html' updated as a place-holder, but you should make your own.
 
 ### A (skippable) note on endpoints
 
@@ -86,9 +86,9 @@ In order to make a function in Lambda:
 ### Deploying the code to Lambda
 
 * In order to deploy our code to Lambda we need to [create a 'deployment package' - basically a .zip file with all the necessary bits and bobs to run](http://docs.aws.amazon.com/lambda/latest/dg/nodejs-create-deployment-pkg.html).
-* First, you need to make some small edits to `index.js`. Change `const APP_ID = '{app-id}'` to the APP_ID found in the top left-hand corner of the Alexa console. Then change `const testNames = [...];` to an array of the names of rooms you'd like to find. These are just the names of the room calendars on your Office 365 instance, but **it's important that these names are exact as they're used to identify the right calendars.**
+* First, you need to make some small edits to `lambda/config.js`. Change `const APP_ID = '{app-id}'` to the APP_ID found in the top left-hand corner of the Alexa console. Then change `const testNames = [...];` to an array of the names of rooms you'd like to find. These are just the names of the room calendars on your Office 365 instance, but **it's important that these names are exact as they're used to identify the right calendars.**
 * Then open a terminal, and in it navigate to the `lambda` directory. Run `npm install`, and it will install all the necessary modules for you. If this doesn't work, the required packages are request, q, moment, and alexa-sdk.
-* Then within the lambda folder, select `index.js`, `requesters.js`, and `node_modules`; right-click to compress them to a .zip file. **Do not compress the whole lambda folder from the root folder; that won't work.** It's fine if you accidentally compress `package.json` with the others though!
+* Then within the lambda folder, select `index.js`, `requesters.js`, `resources.js`, `config.js` and `node_modules`; right-click to compress them to a .zip file. **Do not compress the whole lambda folder from the root folder; that won't work.** It's fine if you accidentally compress `package.json` with the others though!
 * Upload your .zip file (or 'deployment package') to Lambda.
 
 * Lastly, back on Lambda, leave your handler as index.handler, and use a lambda_basic_execution role. You may have to create this role if this is your first Lambda function.
@@ -144,7 +144,7 @@ One of the goals of this project is to automate (or at least put in the command 
 
 1. From the `automation` folder, run `cd ../lambda`.
 2. Run `npm install` to install node_modules/, if you haven't already.
-3. Run `zip -r -X lambda.zip index.js requesters.js node_modules/` to recursively compress the deployment package to `lambda.zip`.
+3. Run `zip -r -X lambda.zip index.js requesters.js resources.js config.js node_modules/` to recursively compress the deployment package to `lambda.zip`.
 4. Run the below command to create the function, replacing {} with the ARN of the role. This can be found by running `aws iam get-role --role-name room_finder_basic_execution`, or in the Roles section of AWS IAM.
   ```
   aws lambda create-function \
@@ -191,7 +191,7 @@ One of the goals of this project is to automate (or at least put in the command 
 **Lastly, you may want to update the lambda function after you've made any changes** (Commands below are listed in `automation/update_lambda.sh`.)
 
 1. From the `automation` folder, `cd ../lambda`.
-2. Run `zip -r -X lambda.zip index.js requesters.js node_modules/` to compress our updated files to a new deployment package.
+2. Run `zip -r -X lambda.zip index.js requesters.js resources.js config.js node_modules/` to compress our updated files to a new deployment package.
 3. Run `aws lambda update-function-code --function-name 'RoomFinder' --zip-file 'fileb://lambda.zip'` to update the code.
 
 ## Doing the account link

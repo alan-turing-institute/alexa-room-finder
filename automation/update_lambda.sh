@@ -2,6 +2,6 @@
 
 cd ../lambda
 
-zip -r -X lambda.zip index.js requesters.js node_modules/
+zip -r -X lambda.zip index.js requesters.js resources.js config.js node_modules/
 
 aws lambda update-function-code --function-name 'RoomFinder' --zip-file 'fileb://lambda.zip'
