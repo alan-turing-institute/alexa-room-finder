@@ -191,8 +191,9 @@ One of the goals of this project is to automate (or at least put in the command 
 **Lastly, you may want to update the lambda function after you've made any changes** (Commands below are listed in `automation/update_lambda.sh`.)
 
 1. From the `automation` folder, `cd ../lambda`.
-2. Run `zip -r -X lambda.zip index.js requesters.js resources.js config.js node_modules/` to compress our updated files to a new deployment package.
-3. Run `aws lambda update-function-code --function-name 'RoomFinder' --zip-file 'fileb://lambda.zip'` to update the code.
+2. Run `mv lambda.zip backup_lambda.zip` to backup the old lambda code, in case the updated code doesn't work. Don't run this file twice in a row with untested code, as you'll overwrite your older backup.
+3. Run `zip -r -X lambda.zip index.js requesters.js resources.js config.js node_modules/` to compress our updated files to a new deployment package.
+4. Run `aws lambda update-function-code --function-name 'RoomFinder' --zip-file 'fileb://lambda.zip'` to update the code.
 
 ## Doing the account link
 

@@ -20,7 +20,6 @@ const states = {
   TIMEMODE: '_TIMEMODE'
 };
 
-
 /**
  * The set of handlers used for when a new session is inititated.
  */
