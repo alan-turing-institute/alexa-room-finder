@@ -39,7 +39,7 @@ We'll be using the [Authorisation Code Grant](https://tools.ietf.org/html/rfc674
 
 In order to set up the account linking part of this model, I'd suggest opening the [Microsoft App Dev Portal](https://apps.dev.microsoft.com/#/appList) (where we register the app to give us a token) and the Alexa Skill Configuration Page at the same time; it requires quite a lot of copy-pasting between the two.
 
-* In the Microsoft Portal, click 'add an app', and name it anything you like.
+* In the Microsoft Portal, click 'Add an app', and name it anything you like.
 * In the Microsoft Portal, click 'Add platforms', then 'Web'.
     * Under platforms, click 'Allow Implicit Flow'.
     * Under platforms, add 3 redirect URIS: 'https://amazon.com', 'https://layla.amazon.com/api/skill/link/{SKILL-ID-GOES-HERE}', 'https://pitangui.amazon.com/api/skill/link/{SKILL-ID-GOES-HERE}'. You can find the latter two URLs back in Alexa, under Redirect URLs.
@@ -64,7 +64,7 @@ On a similar but unrelated note, you also have two available APIs for accessing 
 
 The `Calendars.ReadWrite.Shared` scope, although currently provided as part of the Graph API, is broken. [This StackOverflow question](http://stackoverflow.com/questions/42761308/errors-accessing-shared-room-calendars-through-microsoft-graph-api) roughly explains and confirms the issue, as of 14/02/17. In order to bypass the use of this scope, we therefore require some fairly specific calendar sharing, so we only require our authenticated account's list of calendars. To do this, open any account **that is a delegate to and has full access to** the Room Calendars you want to use; if you're doing this for a company, you might have to get an Office 365 Admin to set this up for you. On this account, click open another mailbox under your profile picture, then type in the email address of the Room Calendar you want to use.
 
-![Calendar Sharing](https://cloud.githubusercontent.com/assets/20475469/23951361/c46710e2-0985-11e7-91f6-69d83fadd127.png)
+<img src="https://cloud.githubusercontent.com/assets/20475469/23951361/c46710e2-0985-11e7-91f6-69d83fadd127.png" width="300" alt="Calendar Sharing">
 
 Then, on the page that opens, navigate to the calendar page, click 'Share' and share the default calendar to the Office365 account you're going to use to authenticate the Alexa Skill. You only need 'view when busy' access for the skill to work.
 
@@ -123,6 +123,8 @@ Lastly, I included a shell script, so if you do install lambda-local globally, y
 ## Automating Lambda Function Creation and Configuration
 
 One of the goals of this project is to automate (or at least put in the command line) as much of the set-up as possible. While AWS CLI provides no support for Alexa Skills, you can use AWS CLI to create and update the Lambda function. The necessary bash commands to do this are found in the `automation` folder, and are detailed below. Once you've edited the shell files to have the correct configuration values, you can run any of the files from the `automation` folder, for the desired effect.
+
+Before you start this process, make sure to set the values in config.js. Change `const APP_ID = '{app-id}'` to the APP_ID found in the top left-hand corner of the Alexa console. Then change `const testNames = [...];` to an array of the names of rooms you'd like to find. These are just the names of the room calendars on your Office 365 instance, but **it's important that these names are exact as they're used to identify the right calendars.**
 
 **First you need to install and configure AWS CLI** (Commands below are listed in `automation/configure_aws_cli.sh`.)
 
