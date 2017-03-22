@@ -1,12 +1,12 @@
 /**
- * @file Exports the functions to check room availability, and then create a meeting
- * on the calendar. Accessible using 'require(./requesters)'
+ * @file Functions to check room availability, and then create a meeting
+ * on the calendar. All requests to Microsoft Graph API are made here.
  */
 
 'use strict';
 
-var request = require('request'); //For http requests to REST API
-var Q = require('q'); //For promises
+var request = require('request');
+var Q = require('q');
 
 var requesters = {} //Requesters object to export - 'require'd by index.js
 
@@ -52,15 +52,18 @@ requesters.postRoom = function(token, ownerAddress, ownerName, startTime, endTim
     } ]
   }
 
-  //Posts event
-  request.post({
+  var toPost = {
     url: 'https://graph.microsoft.com/v1.0/me/events',
     headers: {
       'content-type': 'application/json',
       authorization: 'Bearer ' + token,
     },
     body: JSON.stringify(newEvent)
-  }, function (err, response, body) {
+  }
+
+  //Posts event
+  request.post(toPost, function (err, response, body) {
+
     var parsedBody = JSON.parse(body); //TODO: Parsed body errors due to incorrect tokens are not handled properly by this code. Place after if(err) to fix.
 
     if (err) {
@@ -68,7 +71,7 @@ requesters.postRoom = function(token, ownerAddress, ownerName, startTime, endTim
     } else if (parsedBody.error) {
       deferred.reject(parsedBody.error);
     } else {
-      deferred.resolve(ownerName);
+      deferred.resolve();
     }
   });
   return deferred.promise;
@@ -85,12 +88,14 @@ requesters.getCalendars = function(token) {
 
   var deferred = Q.defer();
 
-  request.get({
+  var toGet = {
     url: 'https://graph.microsoft.com/beta/Users/Me/Calendars', //In order to obtain owner, which I'd like to use, the beta endpoint must be used. //TODO: When updated, change this endpoint.
     headers: {
       authorization: 'Bearer ' + token,
     },
-  }, function (err, response, body) {
+  }
+
+  request.get(toGet, function (err, response, body) {
     var parsedBody = JSON.parse(body);
 
     if (err) {
@@ -127,7 +132,7 @@ requesters.findFreeRoom = function(token, startTime, endTime, namesToFind, parse
    *
    * This is done asynchronously to speed up the process. This means a
    * system must be built to register if no calendars were free.
-   * TODO: Add a way for it to register no rooms on the list being free.*/
+   * TODO: Improve the code that registers that no rooms are free, as it's hacky.*/
 
   var calendarsTotal = parsedCals.length;
   var calendarsUnavailable = 0;
@@ -137,12 +142,14 @@ requesters.findFreeRoom = function(token, startTime, endTime, namesToFind, parse
 
       var calViewUrl = 'https://graph.microsoft.com/v1.0/Users/Me/Calendars/' + calendar.id.toString() + '/calendarView?startDateTime=' + startTime + '&endDateTime=' + endTime;
 
-      request.get({
+      var toGet = {
         url: calViewUrl,
         headers: {
           authorization: 'Bearer ' + token,
         },
-      }, function (err, response, body) {
+      }
+
+      request.get(toGet, function (err, response, body) {
         var parsedBody = JSON.parse(body);
         if (err) {
           deferred.reject(err)

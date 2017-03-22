@@ -8,37 +8,37 @@
 'use strict';
 
 const Alexa = require('alexa-sdk');
-const requesters = require('./requesters'); //For making requests to Graph API
-
-//App ID of Alexa skill, found on Alexa Skill Page. Replace this if you're using this independently.
-const APP_ID = '{app-id}';
-
-//Names of all calendars to be looked for as rooms.
-const testNames = ['alexaroom1', 'alexaroom2'];
+const moment = require('moment');
+const Q = require('q');
+const requesters = require('./requesters')
+const config = require('./config');
+const resources = require('./resources');
 
 //Object of all states to be used by the code.
 const states = {
-  RESTARTMODE: '_RESTARTMODE',
-  CONFIRMMODE: '_CONFIRMMODE' // Initiated by BookIntent, when user asks to book, and an available room is found.
+  CONFIRMMODE: '_CONFIRMMODE', // Initiated by BookIntent, when user asks to book, and an available room is found.
+  TIMEMODE: '_TIMEMODE'
 };
 
-//The set of handlers used for the overall session, but mostly to initiate a new session.
+/**
+ * The set of handlers used for when a new session is inititated.
+ */
 const sessionHandlers = {
-  //Called when Room Booker is opened without being asked to book a room.
+  //Called when skill is opened without being asked to book a room.
   'LaunchRequest': function() {
-    this.attributes.speechOutput = this.t('WELCOME_MESSAGE');
-    this.attributes.repromptSpeech = this.t('WELCOME_REPROMPT', this.t('SKILL_NAME'));
-    this.emit(':ask', this.attributes.speechOutput, this.attributes.repromptSpeech);
+    emitAsk.call(this,
+      this.t('WELCOME_MESSAGE', this.t('BUSINESS_NAME')),
+      this.t('WELCOME_REPROMPT', this.t('SKILL_NAME')));
   },
   //Gives a help message
   'AMAZON.HelpIntent': function () {
-    this.attributes.speechOutput = this.t('HELP_MESSAGE');
-    this.attributes.repromptSpeech = this.t('HELP_REPROMPT');
-    this.emit(':ask', this.attributes.speechOutput, this.attributes.repromptSpeech);
+    emitAsk.call(this,
+      this.t('HELP_MESSAGE'),
+      this.t('HELP_REPROMPT'));
   },
   //Repeats last messages
   'AMAZON.RepeatIntent': function () {
-    this.emit(':ask', this.attributes.speechOutput, this.attributes.repromptSpeech);
+    emitRepeat.call(this);
   },
   //Stop, cancel, and no, all end session. Can be individually edited for more complex conversations.
   'AMAZON.StopIntent': function () {
@@ -54,52 +54,22 @@ const sessionHandlers = {
   'AMAZON.YesIntent': function() {
     this.emit('BookIntent');
   },
-  //Does the key booking function. This is intended to work from a LaunchRequest - i.e. "Ask room booker to book me a room."
+  //Does the key booking function. This is intended to work from a LaunchRequest - i.e. "Ask Room Finder to book me a room."
   'BookIntent': function() {
 
-    var that = this;
+    this.handler.state = states.TIMEMODE;
 
-    //Define start and end time of period to check
-    var startTime = new Date();
-    var endTime = new Date(startTime.getTime() + 30 * 60000);
-
-    //Save dates in attributes as ISO strings, so they can be accessed to post the event later.
-    this.attributes.startTime = startTime.toISOString();
-    this.attributes.endTime = endTime.toISOString();
-
-    //Retrieves all of the users calendars, with error callback spoken through Alexa.
-    requesters.getCalendars(that.event.session.user.accessToken)
-      .then(function(parsedCals) {
-        //Finds a free room from one of the calendars, with error callback spoken through Alexa.
-        requesters.findFreeRoom(that.event.session.user.accessToken, that.attributes.startTime, that.attributes.endTime, testNames, parsedCals)
-        .then(function(creds) {
-          if (creds) {
-            //Changes state to confirm mode, as a free room has been found.
-            that.handler.state = states.CONFIRMMODE;
-
-            //Stores the owner of the room and room name as attributes, for later use when booking room.
-            that.attributes.ownerAddress = creds.ownerAddress;
-            that.attributes.ownerName = creds.ownerName;
-            that.attributes.roomName = creds.name;
-
-            that.attributes.speechOutput = that.t('ROOM_AVAILABLE_MESSAGE', that.attributes.roomName);
-            that.attributes.repromptSpeech = that.t('ROOM_AVAILABLE_REPROMPT', that.attributes.roomName);
-            that.emit(':ask', that.attributes.speechOutput, that.attributes.repromptSpeech);
-          } else {
-            that.emit(':tell', that.t('ROOM_UNAVAILABLE_MESSAGE'));
-          }
-        }, function(roomError) {
-          that.emit(':tell', that.t('ROOM_ERROR', roomError));
-        });
-      }, function(calError) {
-        that.emit(':tell', that.t('CALENDAR_ERROR', calError));
-      });
-    },
-  //Only called when an unhandled intent is sent, which should never happen in the code at present, as there is only one custom intent, so that's effectively always used.
+    emitAsk.call(this,
+      this.t('TIME_DURATION_MESSAGE'),
+      this.t('TIME_DURATION_REPROMPT')
+    );
+  },
+  //Only called when an unhandled intent is sent, which should never happen in the code at present, as there is only one custom intent, so this's effectively always used.
   'Unhandled': function() {
-    this.attributes.speechOutput = this.t('UNHANDLED_MESSAGE');
-    this.attributes.repromptSpeech = this.t('UNHANDLED_REPROMPT');
-    this.emit(':ask', this.attributes.speechOutput, this.attributes.repromptSpeech);
+    emitAsk.call(this,
+      this.t('UNHANDLED_MESSAGE'),
+      this.t('UNHANDLED_REPROMPT')
+    );
   },
   //Called from all state handlers when the session ends without a booking being made. Also called in general session.
   'SessionEndedRequest': function () {
@@ -107,17 +77,22 @@ const sessionHandlers = {
   },
 };
 
-//This set of handlers is only used when you call a StartOver intent from Confirm Mode. Every intent here is an exact copy of its counterpart in sessionhandlers.
-const restartModeHandlers = Alexa.CreateStateHandler(states.RESTARTMODE, {
-  //Gives a help message
+/**
+ * The set of handlers used to ask user how long they want to book the room for.
+ *
+ * states.TIMEMODE is appeneded to all the Intent names of this string.
+ */
+const timeModeHandlers = Alexa.CreateStateHandler(states.TIMEMODE, {
+  //Gives a different help message
   'AMAZON.HelpIntent': function () {
-    this.attributes.speechOutput = this.t('HELP_MESSAGE');
-    this.attributes.repromptSpeech = this.t('HELP_REPROMPT');
-    this.emit(':ask', this.attributes.speechOutput, this.attributes.repromptSpeech);
+    emitAsk.call(this,
+      this.t('TIME_HELP_MESSAGE', this.attributes.roomName),
+      this.t('TIME_HELP_REPROMPT', this.attributes.roomName)
+    );
   },
   //Repeats last messages
   'AMAZON.RepeatIntent': function () {
-    this.emit(':ask', this.attributes.speechOutput, this.attributes.repromptSpeech);
+    emitRepeat.call(this);
   },
   //Stop, cancel, and no, all end session. Can be individually edited for more complex conversations.
   'AMAZON.StopIntent': function () {
@@ -129,70 +104,90 @@ const restartModeHandlers = Alexa.CreateStateHandler(states.RESTARTMODE, {
   'AMAZON.NoIntent': function() {
     this.emit('SessionEndedRequest');
   },
-  //Yes calls booking function
-  'AMAZON.YesIntent': function() {
-    this.emitWithState('BookIntent');
-  },
-  //Does the key booking function. This is intended to work from a LaunchRequest - i.e. "Ask room booker to book me a room."
-  'BookIntent': function() {
+  //DurationIntent is used to
+  'DurationIntent': function() {
 
-    var that = this;
+    var bookingDuration = moment.duration(this.event.request.intent.slots.Duration.value);
 
-    //Define start and end time of period to check
-    var startTime = new Date();
-    var endTime = new Date(startTime.getTime() + 30 * 60000);
+    if(bookingDuration) {
+      if (bookingDuration.asHours() > 2) {
+        //Asks again if too long
+        emitAsk.call(this,
+          this.t('TIME_TOO_LONG_MESSAGE'),
+          this.t('TIME_TOO_LONG_REPROMPT')
+        );
+      } else if (bookingDuration.asHours() <= 0) {
+        //Asks again if too short, or not applicable.
+        emitAsk.call(this,
+          this.t('TIME_UNHANDLED_MESSAGE'),
+          this.t('TIME_UNHANDLED_REPROMPT')
+        );
+      } else {
 
-    //Save dates in attributes as ISO strings, so they can be accessed to post the event later.
-    this.attributes.startTime = startTime.toISOString();
-    this.attributes.endTime = endTime.toISOString();
+        setDuration.call(this, bookingDuration);
 
-    //Retrieves all of the users calendars, with error callback spoken through Alexa.
-    requesters.getCalendars(that.event.session.user.accessToken)
-      .then(function(parsedCals) {
-        //Finds a free room from one of the calendars, with error callback spoken through Alexa.
-        requesters.findFreeRoom(that.event.session.user.accessToken, that.attributes.startTime, that.attributes.endTime, testNames, parsedCals)
-        .then(function(creds) {
+        getRoom.call(this)
+        .then((creds) => {
           if (creds) {
-            //Changes state to confirm mode, as a free room has been found.
-            that.handler.state = states.CONFIRMMODE;
+            //Asks for confirmation if room is available
+            this.handler.state = states.CONFIRMMODE;
 
-            //Stores the owner of the room and room name as attributes, for later use when booking room.
-            that.attributes.ownerAddress = creds.ownerAddress;
-            that.attributes.ownerName = creds.ownerName;
-            that.attributes.roomName = creds.name;
-
-            that.attributes.speechOutput = that.t('ROOM_AVAILABLE_MESSAGE', that.attributes.roomName);
-            that.attributes.repromptSpeech = that.t('ROOM_AVAILABLE_REPROMPT', that.attributes.roomName);
-            that.emit(':ask', that.attributes.speechOutput, that.attributes.repromptSpeech);
+            emitAsk.call(this,
+              this.t('ROOM_AVAILABLE_MESSAGE', this.attributes.roomName),
+              this.t('ROOM_AVAILABLE_REPROMPT', this.attributes.roomName)
+            );
           } else {
-            that.emit(':tell', that.t('ROOM_UNAVAILABLE_MESSAGE'));
+            //Asks again if no rooms are available for the specified time.
+            emitAsk.call(this,
+              this.t('TIME_UNAVAILABLE_MESSAGE', this.attributes.duration),
+              this.t('TIME_UNAVAILABLE_REPROMPT', this.attributes.duration)
+            );
           }
-        }, function(roomError) {
-          that.emit(':tell', that.t('ROOM_ERROR', roomError));
-        });
-      }, function(calError) {
-        that.emit(':tell', that.t('CALENDAR_ERROR', calError));
-      });
-    },
-  //Only called when an unhandled intent is sent, which should never happen in the code at present, as there is only one custom intent, so that's effectively always used.
+        }, (error) => {
+            this.emit(':tellWithCard',
+              this.t('ROOM_ERROR'),
+              this.t('ROOM_ERROR_CARD_TITLE'),
+              error
+            );
+            console.error("\n Room Error: " + error);
+          });
+        }
+    } else {
+      //Asks again if no/invalid duration is obtained from intent.
+      emitAsk.call(this,
+        this.t('TIME_UNHANDLED_MESSAGE'),
+        this.t('TIME_UNHANDLED_MESSAGE')
+      );
+    }
+  },
+  'AMAZON.StartOverIntent':function() {
+    emitStartOver.call(this);
+  },
+  //Only called when an unhandled intent is sent, which should never happen in the code at present, as there is only one custom intent, so this's effectively always used.
   'Unhandled': function() {
-    this.attributes.speechOutput = this.t('UNHANDLED_MESSAGE');
-    this.attributes.repromptSpeech = this.t('UNHANDLED_REPROMPT');
-    this.emit(':ask', this.attributes.speechOutput, this.attributes.repromptSpeech);
+    emitAsk.call(this,
+      this.t('TIME_UNHANDLED_MESSAGE'),
+      this.t('TIME_UNHANDLED_REPROMPT')
+    );
   }
 });
 
-//Set of handlers used after you've confirmed you want to book a room.
+
+
+/**
+ * Set of handlers used to confirm a booking.
+ */
 const confirmModeHandlers = Alexa.CreateStateHandler(states.CONFIRMMODE, {
   //Gives a different help message
   'AMAZON.HelpIntent': function () {
-    this.attributes.speechOutput = this.t('BOOKING_HELP_MESSAGE', this.attributes.roomName);
-    this.attributes.repromptSpeech = this.t('BOOKING_HELP_REPROMPT', this.attributes.roomName);
-    this.emit(':ask', this.attributes.speechOutput, this.attributes.repromptSpeech);
+    emitAsk.call(this,
+      this.t('BOOKING_HELP_MESSAGE', this.attributes.roomName),
+      this.t('BOOKING_HELP_REPROMPT', this.attributes.roomName)
+    );
   },
   //Repeats last messages
   'AMAZON.RepeatIntent': function () {
-    this.emit(':ask', this.attributes.speechOutput, this.attributes.repromptSpeech);
+    emitRepeat.call(this);
   },
   //Stop, cancel, and no, all end session. Can be individually edited for more complex conversations.
   'AMAZON.StopIntent': function () {
@@ -211,91 +206,147 @@ const confirmModeHandlers = Alexa.CreateStateHandler(states.CONFIRMMODE, {
   //BookIntent is used to finalise a booking.
   'BookIntent': function() {
 
-    var that = this;
-
     //Posts room, with error callback spoken through Alexa
-    requesters.postRoom(this.event.session.user.accessToken, this.attributes.ownerAddress, this.attributes.ownerName, this.attributes.startTime, this.attributes.endTime).then(function(owner) {
-      that.emit(':tell', that.t('ROOM_BOOKED', that.attributes.ownerName));
-    }, function(bookError) {
-      that.emit(':tell', that.t('BOOKING_ERROR', bookError));
+    requesters.postRoom(this.event.session.user.accessToken, this.attributes.ownerAddress, this.attributes.ownerName, this.attributes.startTime, this.attributes.endTime)
+    .then(() => {
+      this.emit(':tellWithCard',
+        this.t('ROOM_BOOKED', this.attributes.ownerName, this.attributes.duration),
+        this.t('CARD_ROOM_BOOKED_TITLE', this.attributes.ownerName),
+        this.t('CARD_ROOM_BOOKED_CONTENT', this.attributes.ownerName, this.attributes.duration)
+    );
+  }, (bookError) => {
+      this.emit(':tellWithCard',
+        this.t('BOOKING_ERROR'),
+        this.t('BOOKING_ERROR_CARD_TITLE'),
+        bookError
+      );
+      console.error('Posting Error: ' + bookError);
     });
   },
   'AMAZON.StartOverIntent':function() {
-    this.handler.state = states.RESTARTMODE;
-    this.attributes.ownerAddress = undefined;
-    this.attributes.ownerName = undefined;
-    this.attributes.roomName = undefined;
-    this.attributes.startTime = undefined;
-    this.attributes.endTime = undefined;
-
-    this.attributes.speechOutput = this.t('WELCOME_MESSAGE');
-    this.attributes.repromptSpeech = this.t('WELCOME_REPROMPT', this.t('SKILL_NAME'));
-    this.emit(':ask', this.attributes.speechOutput, this.attributes.repromptSpeech);
+    emitStartOver.call(this);
   },
-  //Only called when an unhandled intent is sent, which should never happen in the code at present, as there is only one custom intent, so that's effectively always used.
+  //Only called when an unhandled intent is sent, which should never happen in the code at present, as there is only one custom intent, so this's effectively always used.
   'Unhandled': function() {
-    this.attributes.speechOutput = this.t('BOOKING_UNHANDLED_MESSAGE');
-    this.attributes.repromptSpeech = this.t('BOOKING_UNHANDLED_REPROMPT');
-    this.emit(':ask', this.attributes.speechOutput, this.attributes.repromptSpeech);
+    emitAsk.call(this,
+      this.t('BOOKING_UNHANDLED_MESSAGE'),
+      this.t('BOOKING_UNHANDLED_REPROMPT')
+    );
   }
 });
 
-//All strings used are below. Here, only 'en-GB' should be required.
-//It will break if used in America without en-US, so it's sensible to include.
-const languageStrings = {
-  'en-GB': {
-    translation: {
-      SKILL_NAME: "Room Booker",
-      WELCOME_MESSAGE: "Would you like to book a room for half an hour?",
-      WELCOME_REPROMPT: "I'm %s. My job is to book you a room! For further instructions, please ask for help.",
-      HELP_MESSAGE: "I can book one of the meeting rooms for you for half an hour. Would you like me to book you a room?",
-      HELP_REPROMPT: "Would you like me to book a meeting room for you?",
-      UNHANDLED_MESSAGE: "Sorry, I didn't get that. Would you like me to book a room?",
-      UNHANDLED_REPROMPT: "I can book meeting rooms for you. Why don't you book a room?",
-      ROOM_AVAILABLE_MESSAGE: "%s is available. Would you like me to book it for you?",
-      ROOM_AVAILABLE_REPROMPT: "Would you like me to book %s for you?",
-      ROOM_UNAVAILABLE_MESSAGE: "Sorry, no rooms are available right now. Maybe try again later!",
-      ROOM_BOOKED: "Great. I have booked %s for you.",
-      BOOKING_HELP_MESSAGE: "I checked the rooms, and %s is available. Say yes if you'd like to book it.",
-      BOOKING_HELP_REPROMPT: "Say yes if you want to book %s, or no if you don't.",
-      BOOKING_UNHANDLED_MESSAGE: "Sorry, I didn't get that. Did you want that room?",
-      BOOKING_UNHANDLED_REPROMPT: "Please confirm if you want that room I found. Bye!",
-      CALENDAR_ERROR: "There was an error retrieving calendars: %s",
-      ROOM_ERROR: "There was an error retrieving a free room: %s",
-      BOOKING_ERROR: "There was an error booking the room: %s",
-      STOP_MESSAGE: "Alright. Goodbye!"
-    },
-  },
-  'en-US': {
-    translation: {
-      SKILL_NAME: "Room Booker",
-      WELCOME_MESSAGE: "Would you like to book a room for 30 minutes?",
-      WELCOME_REPROMPT: "I'm %s. My job is to book you a room! For further instructions, please ask for help.",
-      HELP_MESSAGE: "I can book one of the meeting rooms for you for 30 minutes. Would you like me to book you a room?",
-      HELP_REPROMPT: "Would you like me to book a meeting room for you?",
-      UNHANDLED_MESSAGE: "Sorry, I didn't get that. Would you like me to book a room?",
-      UNHANDLED_REPROMPT: "I can book meeting rooms for you. Why don't you book a room?",
-      ROOM_AVAILABLE_MESSAGE: "%s is available. Would you like me to book it for you?",
-      ROOM_AVAILABLE_REPROMPT: "Would you like me to book %s for you?",
-      ROOM_UNAVAILABLE_MESSAGE: "Sorry, no rooms are available right now. Maybe try again later!",
-      ROOM_BOOKED: "Great. I have booked %s for you.",
-      BOOKING_HELP_MESSAGE: "I checked the rooms, and %s is available. Say yes if you'd like to book it.",
-      BOOKING_HELP_REPROMPT: "Say yes if you want to book %s, or no if you don't.",
-      BOOKING_UNHANDLED_MESSAGE: "Sorry, I didn't get that. Did you want that room?",
-      BOOKING_UNHANDLED_REPROMPT: "Please confirm if you want that room I found. Bye!",
-      CALENDAR_ERROR: "There was an error retrieving calendars: %s",
-      ROOM_ERROR: "There was an error retrieving a free room: %s",
-      BOOKING_ERROR: "There was an error booking the room: %s",
-      STOP_MESSAGE: "Alright. Goodbye!"
-    },
-  }
-};
+/**
+ * emitAsk - takes 2 strings, sets them as attributes for use by repeat, then emits them to ':ask'
+ *
+ * @param  {string} speechOutput   the initial speech output
+ * @param  {string} repromptSpeech the reprompt output
+ *
+ * NB: Must be bound to the correct this.
+ */
+function emitAsk(speechOutput, repromptSpeech) {
+  this.attributes.speechOutput = speechOutput;
+  this.attributes.repromptSpeech = repromptSpeech;
+  this.emit(':ask', this.attributes.speechOutput, this.attributes.repromptSpeech);
+}
 
-//Main
+/**
+ * resetAttributes - resets all non-state attributes to undefined
+ *
+ * NB: Must be bound to the correct this
+ */
+function resetAttributes() {
+  this.attributes.ownerAddress = undefined;
+  this.attributes.ownerName = undefined;
+  this.attributes.roomName = undefined;
+  this.attributes.startTime = undefined;
+  this.attributes.endTime = undefined;
+  this.attributes.duration = undefined;
+  this.attributes.speechOutput = undefined;
+  this.attributes.repromptSpeech = undefined;
+}
+
+/**
+ * emitStartOver - resets all states using resetAttributes(), returns state to '', then emits the initial LaunchRequest.
+ *
+ * NB: Must be bound to the correct this.
+ */
+function emitStartOver() {
+  this.handler.state = '';
+  this.handler.response.sessionAttributes['STATE'] = '';
+
+  resetAttributes.call(this);
+
+  this.emitWithState('LaunchRequest');
+}
+
+/**
+ * emitRepeat - calls emitAsk with the speech attributes set by the previous message
+ *
+ * NB: Must be bound to the correct this
+ */
+function emitRepeat() {
+  emitAsk.call(this,
+    this.attributes.speechOutput,
+    this.attributes.repromptSpeech);
+}
+
+/**
+ * setDuration - sets the startTime, endTime, and duration attributes.
+ *
+ * @param  {string} bookingDuration ISO duration parsed by moment.js
+ *
+ * NB: Must be bound to the correct this
+ */
+function setDuration(bookingDuration) {
+  //Define start and end time of period to check
+  var startTime = new Date();
+  var endTime = new Date(startTime.getTime() + bookingDuration.asMilliseconds());
+
+  //Save dates in attributes as ISO strings, so they can be accessed to post the event later.
+  this.attributes.startTime = startTime.toISOString();
+  this.attributes.endTime = endTime.toISOString();
+  this.attributes.duration = bookingDuration.asMinutes();
+}
+
+/**
+ * getRoom - uses attributes set by setDuration to get room, and store its credentials in attributes. Also has error handling.
+ *
+ * @return {promise}  Promise resolved to object. This contains owner, ownerName and ownerAddress if room is available, or is just false if no room is available.
+ *
+ * NB: Must be bound to correct this
+ */
+function getRoom() {
+
+  var deferred = Q.defer()
+
+  //Retrieves all of the users calendars, with error callback spoken through Alexa.
+  requesters.getCalendars(this.event.session.user.accessToken)
+  .then((parsedCals) => {
+    //Finds a free room from one of the calendars, with error callback spoken through Alexa.
+    requesters.findFreeRoom(this.event.session.user.accessToken, this.attributes.startTime, this.attributes.endTime, config.testNames, parsedCals)
+    .then((creds) => {
+      //Stores the owner of the room and room name as attributes, for later use when booking room.
+      this.attributes.ownerAddress = creds.ownerAddress;
+      this.attributes.ownerName = creds.ownerName;
+      this.attributes.roomName = creds.name;
+
+      deferred.resolve(creds);
+    }, (roomError) => {
+      deferred.reject(roomError);
+    });
+  }, (calError) => {
+    deferred.reject(calError);
+  });
+  return deferred.promise;
+}
+
+/**
+ * Main
+ */
 exports.handler = (event, context) => {
-  const alexa = Alexa.handler(event, context);
-  alexa.appId = APP_ID; //App ID of Alexa skill, found on skill's page.
-  alexa.resources = languageStrings;
-  alexa.registerHandlers(sessionHandlers, confirmModeHandlers, restartModeHandlers);
-  alexa.execute();
+  const alexa = Alexa.handler(event, context); //See alexa.js in alexa-sdk package for more information
+  alexa.appId = config.appId; //App ID of Alexa skill, found on skill's page.
+  alexa.resources = resources.languageStrings; //All strings to be used by program.
+  alexa.registerHandlers(sessionHandlers, confirmModeHandlers, timeModeHandlers); //See response.js in alexa-sdk package to see other registered handlers.
+  alexa.execute(); //Handles lambda event.
 };
