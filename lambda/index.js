@@ -270,8 +270,8 @@ const nonIntentHandlers  = {
   },
   ':error': function(error) {
     this.emit(':tellWithCard',
-      this.t('BOOKING_ERROR'),
-      this.t('BOOKING_ERROR_CARD_TITLE'),
+      this.t('ERROR'),
+      this.t('ERROR_CARD_TITLE'),
       error
     );
     console.error('There was an error: ' + error);
