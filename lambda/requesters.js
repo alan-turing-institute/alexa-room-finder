@@ -18,7 +18,7 @@ var requesters = {} //Requesters object to export - 'require'd by index.js
  * @param  {string} ownerName   Name of owner of calendar to be booked.
  * @param  {string} startTime   Start time of meeting to post, formatted as ISO-8601 string.
  * @param  {string} endTime     End time of meeting to post, formatted as ISO-8601 string.
- * @return {promise}            Promise resolved to the owner of calendar used. //TODO: This value is not actually used by index.js, but can be very useful for debug. Change before release.
+ * @return {promise}            Promise resolved to nothing.
  */
 requesters.postRoom = function(token, ownerAddress, ownerName, startTime, endTime) {
 
@@ -29,11 +29,11 @@ requesters.postRoom = function(token, ownerAddress, ownerName, startTime, endTim
     Subject: 'Alexa\'s Meeting',
     Start: {
       DateTime: startTime,
-      TimeZone: 'GMT'
+      TimeZone: 'UTC'
     },
     End: {
       DateTime: endTime,
-      TimeZone: 'GMT'
+      TimeZone: 'UTC'
     },
     Body: {
       Content: 'This meeting was booked by Alexa.',

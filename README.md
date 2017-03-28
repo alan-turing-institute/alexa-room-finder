@@ -20,7 +20,7 @@ An Alexa skill is, in a nutshell, an 'app' for the Amazon Echo. Once you've open
 
 ## Setting up the Alexa skill
 
-To set up the actual skill itself, go to the [Alexa skills kit development console](https://developer.amazon.com/edw/home.html) and add a new skill.
+To set up the actual skill itself, go to the [Alexa skills kit development console](https://developer.amazon.com/edw/home.html#/skills/list) and add a new skill.
 
 * In the skill information section, fill in the basic skill information as you wish. It's important to use English (UK) as the language if you're in the UK, or English (US) if you're in the US. It will always work if you add support for both!
 * In the interaction model section:
@@ -97,9 +97,11 @@ In order to make a function in Lambda:
 
 ## Testing The Lambda Function Locally
 
+[lambda-local](https://www.npmjs.com/package/lambda-local) is extremely useful for testing the main Lambda function locally.
+
 In order to test locally, you'll first need a token to pass to the Lambda function. During development, I am using [Postman](https://www.getpostman.com/) to acquire tokens, and copying them in manually.
 
-Edit file: `test/config.js`, most importantly replacing `{token}` with your actual token, and `{app-id}` with the same App ID being used in index.js. You'll also want to change the various other variables. For example:
+When you have a token, edit file: `test/config.js`, most importantly replacing `{token}` with your actual token, and `{app-id}` with the same App ID being used in `index.js`. You'll also want to change the various other variables. For example:
 
 ```
 module.exports = {
@@ -107,6 +109,7 @@ module.exports = {
   token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJEb24ndCBkZWNvZGUgZXhhbXBsZSB0b2tlbnMuIiwiZXhwIjoxLCJuYW1lIjoia25vd2xzaWUiLCJhZG1pbiI6ZmFsc2V9.QhndPM-IJk1XcgntgXqXlI-9mmEesoRLKE1uLhrK5tg",
   startTime: startDateTime.toISOString(),
   endTime: endDateTime.toISOString(),
+  duration: durationInMinutes,
   ownerAddress: "alexaroom1@business.com",
   //Usually the two below have the same value.
   ownerName: "alexaroom1",
@@ -114,11 +117,11 @@ module.exports = {
 }
 ```
 
-[lambda-local](https://www.npmjs.com/package/lambda-local) is extremely useful for testing the main Lambda function locally. `test/lambda-local-test.js` is one editable Javascript file you can use. To test it, simply use Node to run this file from the console: `node test/lambda-local-test.js`. There's a better way to test though:
+Then, provided you install lambda-local globally (`(sudo) npm install -g lambda-local`), you can test intents from the console using this command: `lambda-local -l lambda/index.js -h handler -e test/filename.js` where filename is the JSON request you want to test. I've created test JSONs for all of the available intents. The most important intent to test is the BookIntent from every state, as that is the only intent that directly accesses the Office API.
 
-If you install lambda-local globally (`sudo npm install -g lambda-local`), you can also test from the console using this command: `lambda-local -l lambda/index.js -h handler -e test/filename.js` where filename is the JSON request you want to test. I've created test JSONs for all of the available intents. The most important intent to test is the BookIntent from every state, as that is the only intent that directly accesses the Office API.
+I've also included a useful shell script, so if you do install lambda-local globally, you can just run that using `bash run_tests.sh`; this will test every possible intent, and is probably the quickest way to check that everything is running before deployment. If you get any errors, then you need to worry. Don't be surprised at a few 'Unhandled' responses though - those are meant to happen if you ask the skill to 'Start Over' from the beginning!
 
-Lastly, I included a shell script, so if you do install lambda-local globally, you can just run that using `bash run_tests.sh`; this will test every possible intent, and is probably the quickest way to check that everything is running before deployment. If you get any errors, then you need to worry. Don't be surprised at a couple 'Unhandled' responses though - those are meant to happen if you ask the skill to 'Start Over' from the beginning!
+There is also an example javascript file `test/lambda-local-test.js` that you can just run in node to test an intent, without using the shell at all. I personally found the other methods faster, but thought it was worth including anyway.
 
 ## Automating Lambda Function Creation and Configuration
 
@@ -193,9 +196,10 @@ Before you start this process, make sure to set the values in config.js. Change 
 **Lastly, you may want to update the lambda function after you've made any changes** (Commands below are listed in `automation/update_lambda.sh`.)
 
 1. From the `automation` folder, `cd ../lambda`.
-2. Run `mv lambda.zip backup_lambda.zip` to backup the old lambda code, in case the updated code doesn't work. Don't run this file twice in a row with untested code, as you'll overwrite your older backup.
-3. Run `zip -r -X lambda.zip index.js requesters.js resources.js config.js node_modules/` to compress our updated files to a new deployment package.
-4. Run `aws lambda update-function-code --function-name 'RoomFinder' --zip-file 'fileb://lambda.zip'` to update the code.
+2. Run `npm update` to make sure all modules are updated.
+3. Run `mv lambda.zip backup_lambda.zip` to backup the old lambda code, in case the updated code doesn't work. Don't run this file twice in a row with untested code, as you'll overwrite your older backup.
+4. Run `zip -r -X lambda.zip index.js requesters.js resources.js config.js node_modules/` to compress our updated files to a new deployment package.
+5. Run `aws lambda update-function-code --function-name 'RoomFinder' --zip-file 'fileb://lambda.zip'` to update the code.
 
 ## Doing the account link
 

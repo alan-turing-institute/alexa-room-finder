@@ -9,7 +9,7 @@
 
 const Alexa = require('alexa-sdk');
 const moment = require('moment');
-const requesters = require('./requesters')
+const requesters = require('./requesters');
 const config = require('./config');
 const resources = require('./resources');
 
@@ -237,10 +237,10 @@ const nonIntentHandlers  = {
 
         this.emit(':roomFoundHandler', creds);
       }, (roomError) => {
-        this.emit(':error', roomError)
+        this.emit(':error', roomError);
       });
     }, (calError) => {
-      this.emit(':error', calError)
+      this.emit(':error', calError);
     });
   },
   ':roomFoundHandler': function(creds) {
@@ -276,7 +276,7 @@ const nonIntentHandlers  = {
     );
     console.error('There was an error: ' + error);
   }
-}
+};
 
 /**
  * resetAttributes - resets all non-state attributes to undefined

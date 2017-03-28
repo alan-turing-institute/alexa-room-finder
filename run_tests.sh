@@ -3,16 +3,8 @@
 # These intents require access to the MS Graph API.
 printf '\n Intent: Duration \t State: _TIMEMODE \n\n'
 lambda-local -l lambda/index.js -h handler -e test/test-DurationIntent-State_TIMEMODE.js
-printf '\n Intent: Book \t State: Blank \n\n'
-lambda-local -l lambda/index.js -h handler -e test/test-BookIntent-StateBLANK.js
 printf '\n Intent: Book \t State: _CONFIRMMODE \n\n'
 lambda-local -l lambda/index.js -h handler -e test/test-BookIntent-State_CONFIRMMODE.js
-printf '\n Intent: Book \t State: _TIMEMODE \n\n'
-lambda-local -l lambda/index.js -h handler -e test/test-BookIntent-State_TIMEMODE.js
-printf '\n Intent: Yes  \t State: Blank \n\n'
-lambda-local -l lambda/index.js -h handler -e test/test-YesIntent-StateBLANK.js
-printf '\n Intent: Yes \t State: _TIMEMODE \n\n'
-lambda-local -l lambda/index.js -h handler -e test/test-YesIntent-State_TIMEMODE.js
 
 # Running YesIntent_CONFIRMMODE after BookIntent_CONFIRMMODE will try to book the room
 # twice in a row. The second one will then be declined by the room, as it's already booked.
@@ -21,10 +13,17 @@ lambda-local -l lambda/index.js -h handler -e test/test-YesIntent-State_TIMEMODE
 # printf '\n Intent: Yes \t State: _CONFIRMMODE \n\n'
 # lambda-local -l lambda/index.js -h handler -e test/test-YesIntent-State_CONFIRMMODE.js
 
-
 #These intents don't require access to the MS Graph API.
 printf '\n Intent: LaunchRequest \n\n'
 lambda-local -l lambda/index.js -h handler -e test/test-LaunchRequest.js
+printf '\n Intent: Book \t State: Blank \n\n'
+lambda-local -l lambda/index.js -h handler -e test/test-BookIntent-StateBLANK.js
+printf '\n Intent: Book \t State: _TIMEMODE \n\n'
+lambda-local -l lambda/index.js -h handler -e test/test-BookIntent-State_TIMEMODE.js
+printf '\n Intent: Yes  \t State: Blank \n\n'
+lambda-local -l lambda/index.js -h handler -e test/test-YesIntent-StateBLANK.js
+printf '\n Intent: Yes \t State: _TIMEMODE \n\n'
+lambda-local -l lambda/index.js -h handler -e test/test-YesIntent-State_TIMEMODE.js
 printf '\n Intent: Cancel \t State: Blank \n\n'
 lambda-local -l lambda/index.js -h handler -e test/test-CancelIntent-StateBLANK.js
 printf '\n Intent: Cancel \t State: _CONFIRMMODE \n\n'

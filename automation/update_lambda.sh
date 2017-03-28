@@ -2,6 +2,8 @@
 
 cd ../lambda
 
+npm update
+
 mv lambda.zip backup_lambda.zip
 
 zip -r -X lambda.zip index.js requesters.js resources.js config.js node_modules/
