@@ -201,6 +201,10 @@ Before you start this process, make sure to set the values in config.js. Change 
 4. Run `zip -r -X lambda.zip index.js requesters.js resources.js config.js node_modules/` to compress our updated files to a new deployment package.
 5. Run `aws lambda update-function-code --function-name 'RoomFinder' --zip-file 'fileb://lambda.zip'` to update the code.
 
+## Gulp
+
+You can also update the lambda function using gulp, which is even easier than the shell. This will also minify the code, and create separate build and package folders. To do this, first install [gulp](gulpjs.com), and the dependencies that `gulpfile.js` needs. Then just run `gulp` from the root directory, and it will fully update for you.
+
 ## Doing the account link
 
 Before you test properly on the Echo, you'll need to actually perform the link between your accounts. To do this just open the Alexa [web](https://alexa.amazon.co.uk) or mobile app, and navigate to your fresh new skill. Then click Link Accounts, log in, allow the requested permissions, and hopefully have a successful link.
