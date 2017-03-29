@@ -8,7 +8,7 @@
 
 const lambdaLocal = require('lambda-local');
 
-const config = require('./config') //config.js contains the token.
+const config = require('./test-config'); // config.js contains the token.
 
 //This is the JSON payload that would be sent when the user first agrees to book something, and an example of a normal IntentRequest.
 var jsonPayload = {

@@ -213,7 +213,7 @@ Then, provided you install lambda-local globally (`(sudo) npm install -g lambda-
 
 I've also included a useful shell script, so if you do install lambda-local globally, you can just run that using `bash run_tests.sh`; this will test every possible intent, and is probably the quickest way to check that everything is running before deployment. This is also the script that `npm test` will run (if you run it from the root directory.) If you get any errors, then you need to worry. Don't be surprised at a few 'Unhandled' responses though - those are meant to happen if you ask the skill to 'Start Over' from the beginning!
 
-There is also an example javascript file `test/test-lambda-local-example.js` that you can just run in node to test an intent, without using the shell at all. I personally found the other methods faster, but thought this was worth including anyway.
+There is also an example javascript file `test/test-lambda-local-example.js` that you can just run in node to test an intent, without using the shell at all. I personally found the other methods faster, but thought this was worth including anyway, in case you wanted to make your own lambda-local based scripts.
 
 ## Testing just the requesters
 
