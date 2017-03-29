@@ -1,6 +1,6 @@
 # Room Finder Alexa Skill
 
-A skill built for Amazon's Alexa service, that allows you to book a meeting room at the Turing (or your own business with a little bit of configuration) for up to 2 hours. To get it working, uses simple phrases like:
+A skill built for Amazon's Alexa service, that allows you to book a meeting room at the Turing (or your own business with just a little bit of configuration) for up to 2 hours. To run it, use simple phrases like:
 
 > Alexa, ask Room Finder to find me a room
 
@@ -20,7 +20,7 @@ An Alexa skill is, in a nutshell, an 'app' for the Amazon Echo. Once you've open
 
 ## Setting up the Alexa skill
 
-To set up the actual skill itself, go to the [Alexa skills kit development console](https://developer.amazon.com/edw/home.html#/skills/list) and add a new skill.
+To set up the actual skill itself, go to the [Alexa skills kit development console](https://developer.amazon.com/edw/home.html#/skills/list) and add a new skill. This cannot be found in AWS, and can't be done from the command line - sorry.
 
 * In the skill information section, fill in the basic skill information as you wish. It's important to use English (UK) as the language if you're in the UK, or English (US) if you're in the US. It will always work if you add support for both!
 * In the interaction model section:
@@ -94,34 +94,6 @@ In order to make a function in Lambda:
 * Lastly, back on Lambda, leave your handler as index.handler, and use a lambda_basic_execution role. You may have to create this role if this is your first Lambda function.
 
 * After you've created your Lambda function, look at the top right of the page to get your **Lambda ARN** and put that in the Alexa Skill Information Endpoint field.
-
-## Testing The Lambda Function Locally
-
-[lambda-local](https://www.npmjs.com/package/lambda-local) is extremely useful for testing the main Lambda function locally.
-
-In order to test locally, you'll first need a token to pass to the Lambda function. During development, I am using [Postman](https://www.getpostman.com/) to acquire tokens, and copying them in manually.
-
-When you have a token, edit file: `test/config.js`, most importantly replacing `{token}` with your actual token, and `{app-id}` with the same App ID being used in `index.js`. You'll also want to change the various other variables. For example:
-
-```
-module.exports = {
-  appId: "amzn1.ask.skill.00000000-0000-0000-0000-000000000000",
-  token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJEb24ndCBkZWNvZGUgZXhhbXBsZSB0b2tlbnMuIiwiZXhwIjoxLCJuYW1lIjoia25vd2xzaWUiLCJhZG1pbiI6ZmFsc2V9.QhndPM-IJk1XcgntgXqXlI-9mmEesoRLKE1uLhrK5tg",
-  startTime: startDateTime.toISOString(),
-  endTime: endDateTime.toISOString(),
-  duration: durationInMinutes,
-  ownerAddress: "alexaroom1@business.com",
-  //Usually the two below have the same value.
-  ownerName: "alexaroom1",
-  roomName: "alexaroom1"
-}
-```
-
-Then, provided you install lambda-local globally (`(sudo) npm install -g lambda-local`), you can test intents from the console using this command: `lambda-local -l lambda/index.js -h handler -e test/filename.js` where filename is the JSON request you want to test. I've created test JSONs for all of the available intents. The most important intent to test is the BookIntent from every state, as that is the only intent that directly accesses the Office API.
-
-I've also included a useful shell script, so if you do install lambda-local globally, you can just run that using `bash run_tests.sh`; this will test every possible intent, and is probably the quickest way to check that everything is running before deployment. If you get any errors, then you need to worry. Don't be surprised at a few 'Unhandled' responses though - those are meant to happen if you ask the skill to 'Start Over' from the beginning!
-
-There is also an example javascript file `test/lambda-local-test.js` that you can just run in node to test an intent, without using the shell at all. I personally found the other methods faster, but thought it was worth including anyway.
 
 ## Automating Lambda Function Creation and Configuration
 
@@ -203,11 +175,49 @@ Before you start this process, make sure to set the values in config.js. Change 
 
 ## Gulp
 
-You can also update the lambda function using gulp, which is even easier than the shell. This will also minify the code, and create separate build and package folders. To do this, first install [gulp](gulpjs.com), and the dependencies that `gulpfile.js` needs. Then just run `gulp` from the root directory, and it will fully update for you.
+You can also update the lambda function using gulp, which is easier and provides a neater build than the shell. It will also minify the code, and create build and package folders. To do this, first install [gulp](gulpjs.com), and the dev dependencies for the overall skill - not the lambda. Then just run `gulp` from the root directory, and it will fully update for you. Other gulp commands are `clean`, `minify`, `move_modules`, `zip`, and `upload`. I will probably also build a gulp watcher soon.
+
+## ESLint
+
+I generally use [ESLint](http://eslint.org/), and specifically use the [airbnb](https://github.com/airbnb/javascript) style guide. This is how the project is set up, and most of my code follows this style guide, with the exception of a few rules. You can see my lint config and change it in `package.json` if you want.
 
 ## Doing the account link
 
 Before you test properly on the Echo, you'll need to actually perform the link between your accounts. To do this just open the Alexa [web](https://alexa.amazon.co.uk) or mobile app, and navigate to your fresh new skill. Then click Link Accounts, log in, allow the requested permissions, and hopefully have a successful link.
+
+# Testing
+
+## Testing The Lambda Function Locally
+
+[lambda-local](https://www.npmjs.com/package/lambda-local) is extremely useful for testing the main Lambda function locally.
+
+In order to test locally, you'll first need a token to pass to the Lambda function. During development, I am using [Postman](https://www.getpostman.com/) to acquire tokens, and copying them in manually.
+
+When you have a token, edit file: `test/test-config.js`, most importantly replacing `{token}` with your actual token, and `{app-id}` with the same App ID being used in `index.js`. You'll also want to change the various other variables. For example:
+
+```
+module.exports = {
+  appId: "amzn1.ask.skill.00000000-0000-0000-0000-000000000000",
+  token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJEb24ndCBkZWNvZGUgZXhhbXBsZSB0b2tlbnMuIiwiZXhwIjoxLCJuYW1lIjoia25vd2xzaWUiLCJhZG1pbiI6ZmFsc2V9.QhndPM-IJk1XcgntgXqXlI-9mmEesoRLKE1uLhrK5tg",
+  startTime: startDateTime.toISOString(),
+  endTime: endDateTime.toISOString(),
+  duration: durationInMinutes,
+  ownerAddress: "alexaroom1@business.com",
+  //Usually the two below have the same value.
+  ownerName: "alexaroom1",
+  roomName: "alexaroom1"
+}
+```
+
+Then, provided you install lambda-local globally (`(sudo) npm install -g lambda-local`), you can test intents from the console using this command: `lambda-local -l lambda/index.js -h handler -e test/filename.js` where filename is the JSON request you want to test. I've created test JSONs for all of the available intents. The most important intent to test is the BookIntent from every state, as that is the only intent that directly accesses the Office API.
+
+I've also included a useful shell script, so if you do install lambda-local globally, you can just run that using `bash run_tests.sh`; this will test every possible intent, and is probably the quickest way to check that everything is running before deployment. This is also the script that `npm test` will run (if you run it from the root directory.) If you get any errors, then you need to worry. Don't be surprised at a few 'Unhandled' responses though - those are meant to happen if you ask the skill to 'Start Over' from the beginning!
+
+There is also an example javascript file `test/test-lambda-local-example.js` that you can just run in node to test an intent, without using the shell at all. I personally found the other methods faster, but thought this was worth including anyway.
+
+## Testing just the requesters
+
+One can simply test the requesters using lambda-local, but sometimes that will return timeouts instead of actual errors. Therefore, I made files in `test/requesters/` so you can quickly test the requesters. Simply run each file in node to see if the requesters are working.
 
 ## Testing the skill online
 

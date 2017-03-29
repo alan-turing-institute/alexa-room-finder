@@ -1,33 +1,35 @@
 const gulp = require('gulp');
 const babili = require('gulp-babili');
+const rename = require('gulp-rename');
 const del = require('del');
 const zip = require('gulp-zip');
-const lambda = require('gulp-awslambda')
+const lambda = require('gulp-awslambda');
 
-gulp.task('clean', function() {
-  return del(['./build', './package']);
+gulp.task('clean', function clean() {
+  return del(['./build']);
 });
 
-gulp.task('minify', ['clean'], function() {
+gulp.task('minify', ['clean'], function minify() {
   return gulp.src('./lambda/*.js')
     .pipe(babili())
-    .pipe(gulp.dest('./build'))
+    .pipe(rename({ suffix: '.min' }))
+    .pipe(gulp.dest('./build'));
 });
 
-gulp.task('move_modules', ['clean'], function() {
+gulp.task('moveModules', ['clean'], function moveModules() {
   return gulp.src('./lambda/node_modules/**')
-  .pipe(gulp.dest('./build/node_modules/'))
+  .pipe(gulp.dest('./build/node_modules/'));
 });
 
-gulp.task('zip', ['move_modules', 'minify'], function() {
+gulp.task('makeZip', ['moveModules', 'minify'], function makeZip() {
   return gulp.src('./build/**')
   .pipe(zip('lambda.zip'))
-  .pipe(gulp.dest('./package/'))
+  .pipe(gulp.dest('./build/package/'));
 });
 
-gulp.task('upload', ['zip'], function() {
-  return gulp.src('./package/lambda.zip')
-  .pipe(lambda('RoomFinder', {region:'eu-west-1'}))
+gulp.task('upload', ['makeZip'], function upload() {
+  return gulp.src('./build/package/lambda.zip')
+  .pipe(lambda('RoomFinder', { region: 'eu-west-1' }));
 });
 
 gulp.task('default', ['upload']);

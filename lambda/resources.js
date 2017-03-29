@@ -34,7 +34,7 @@ const languageStrings = {
       TIME_TOO_LONG_REPROMPT: "Please say a time shorter than 2 hours, and I'll try to book you a meeting.",
       ERROR: "There was an error. The intern who made this skill has been notified.",
       ERROR_CARD_TITLE: "Error occurred",
-      STOP_MESSAGE: "Alright. Goodbye!"
+      STOP_MESSAGE: "Alright. Goodbye!",
     },
   },
   'en-US': {
@@ -68,9 +68,9 @@ const languageStrings = {
       TIME_TOO_LONG_REPROMPT: "Please say a time shorter than 2 hours, and I'll try to book you a meeting.",
       ERROR: "There was an error. The intern who made this skill has been notified.",
       ERROR_CARD_TITLE: "Error occurred",
-      STOP_MESSAGE: "Alright. Goodbye!"
+      STOP_MESSAGE: "Alright. Goodbye!",
     },
-  }
+  },
 };
 
 module.exports.languageStrings = languageStrings;

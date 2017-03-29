@@ -1,0 +1,43 @@
+{
+  "name": "room-booker-skill",
+  "version": "1.0.0",
+  "description": "A skill built for Amazon's Alexa service, that allows you to book a meeting room at the Turing (or your own business with a little bit of configuration) for up to 2 hours. To get it working, uses simple phrases like:",
+  "main": "lambda/index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "bash run_tests.sh"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alan-turing-institute/alexa-room-booker.git"
+  },
+  "author": "Tom Knowles",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/alan-turing-institute/alexa-room-booker/issues"
+  },
+  "homepage": "https://github.com/alan-turing-institute/alexa-room-booker#readme",
+  "devDependencies": {
+    "del": "^2.2.2",
+    "eslint": "^3.18.0",
+    "eslint-config-airbnb-base": "^11.1.2",
+    "eslint-plugin-import": "^2.2.0",
+    "gulp": "^3.9.1",
+    "gulp-awslambda": "^0.4.0",
+    "gulp-babili": "0.0.2",
+    "gulp-rename": "^1.2.2",
+    "gulp-zip": "^4.0.0"
+  },
+  "eslintConfig": {
+    "extends": "airbnb-base",
+    "plugins": [
+      "import"
+    ],
+    "rules": {
+      "quotes": "off",
+      "strict": "off"
+    }
+  }
+}
