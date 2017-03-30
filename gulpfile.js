@@ -1,6 +1,5 @@
 const gulp = require('gulp');
 const babili = require('gulp-babili');
-const rename = require('gulp-rename');
 const del = require('del');
 const zip = require('gulp-zip');
 const lambda = require('gulp-awslambda');
@@ -12,7 +11,6 @@ gulp.task('clean', function clean() {
 gulp.task('minify', ['clean'], function minify() {
   return gulp.src('./lambda/*.js')
     .pipe(babili())
-    .pipe(rename({ suffix: '.min' }))
     .pipe(gulp.dest('./build'));
 });
 
