@@ -1,12 +1,14 @@
-# Troubleshooting Documentation [WIP]
+# Troubleshooting Documentation [Draft 1.0, WIP]
 
-Has my skill broken? Sadly, there are quite a lot of hypothetical problems. Sorry. Here are the ones I think are most likely. Please use thoughtfully, as I very likely have missed stuff!
+This is intended to help troubleshoot specific issues. Please use thoughtfully, as I am sure to have missed particular issues and fixes.
 
 Before you read this, have a scan through the README, so you understand how set-up has been done.
 
 ## Some key take aways
 
 - Before you do anything else, check that the accounts are linked. The accounts occasionally like to unlink on Amazon updates, so this is a very common error, and doesn't always cause the same bug. This is therefore the first step of every fix below.
+
+- Fast testing and updating are key when testing this code. Use lambda-local obsessively when making changes. Use gulp for quick updates.
 
 ## It says "There was a problem with the requested skill's response" on opening the Skill!
 
@@ -22,6 +24,10 @@ This was my most common error. It means the AWS Lambda has either failed to retu
 2. Still logged into https://alexa.amazon.co.uk (as the corporate account Alexa uses), go to the home section. You should hopefully see a card with the actual error. If the error is 'Skill response was marked as a failure: The target Lambda application returned a failure response' or 'Null Speechlet Response', then that confirms it's a lambda problem, so move to the next step. If there's some other error, then I'd first suggest googling the error message, and seeing if you can resolve it without code changes - especially if it's 'Alexa Skill', not Lambda, related.
 
 3. Open the [AWS console](https://eu-west-1.console.aws.amazon.com/console/home?region=eu-west-1#), log in as the corporate account, then go to CloudWatch, then Logs. Open the logs for aws/lambda/RoomFinder. Review the most recent logs (the one marked with REPORT) to find the error. If it was a one-off error, you can find the specific RequestID that failed back at https://alexa.amazon.co.uk. It should provide a stack trace in the 'report' section. Find that, and google it, then refer to the 'Debugging code' section.
+
+	NB: If you get timeouts that can often mean there's a problem with the requesters. Try testing those with the files in `test/requesters`.
+
+4. In fixing, test with lambda-local. See the "Testing Lambda Code Locally" section for help with this.
 
 #### Other things you might want to check
 
@@ -151,7 +157,9 @@ The way Alexa book rooms is she creates events on her calendar, and then invites
 
 ## The skill is detecting that rooms are free when they aren't
 
-This means something is wrong with requesters.findFreeRoom(), or the parameters being sent to that function. I suggest testing that with `node test/test-findFreeRoom.js`.
+This ver likely means something is wrong with requesters.findFreeRoom(), or the parameters being sent to that function. I suggest testing that with `node test/test-findFreeRoom.js`. Check the specific times being passed to it.
+
+Alternatively, there may be problems with timezones. See the 'Timezones' section for help with this.
 
 ## Timezones
 
@@ -160,16 +168,6 @@ By default, the skill uses UTC, for everything, always. To my knowledge, this me
 However, if you notice a lag/skip of one hour in detecting free rooms or booking rooms, then this may be something worth checking -  especially if Daylight Savings just happened, or if moment.js/JavaScript have updated their date libraries. I'm also unsure of exactly how IT/events handle and change event bookings across Daylight Savings, so it's also possible that my events might be moved in a different way to others.
 
 You can check what timezone an event is in by making a GET request to `https://graph.microsoft.com/v1.0/Users/Me/Calendars/{CALENDAR-ID-GOES-HERE}/events`, then looking at the various timezone fields available. If you want to change the timezone that is used by Alexa, then edit the way dates are made in `:durationHandler` in `lambda/index.js`, and the timezone used by `postRoom()` in `lambda/requesters.js`. Note that there's a difference between `Date()` and `new Date()`, because JavaScript.
-
-## Debugging Code [WIP]
-
-See this section if you've worked out it's a problem with the code after checking the other sections. This obviously cannot explain how to solve bugs, but will give you my ideas of how to go about it.
-
-- First of all, definitely have a look through the other documentation I've provided. This can help to explain how the set-up has been done, how alexa-sdk module actually works, the alexa-sdk API, and how Room Finder itself actually works.
-
-- Use lambda-local, or invoke the actual lambda function, as regularly as possible. Lambda-local gives fairly good error messages, means you don't have to zip and upload between tests, which massively speeds up the process. It also doesn't use up lambda requests, so is free. I suggest running `bash run_tests.sh` before every upload to lambda, just to check its all functional.
-
-- Use commands or gulp to update. Running `automation/update_lambda.sh` or just running `gulp` (assuming you've installed gulp) will be far faster than manually compressing and uploading a zip file to Lambda.
 
 ## Testing Lambda Code Locally
 
@@ -206,15 +204,15 @@ Before we move on, the most likely cause of this is that the web app, or its pas
 
 7. Try adding this list of URLS:
 
-login.live.com
-login.windows.net
-login.microsoftonline.com
-login-us.microsoftonline.com
-login.chinacloudapi.cn
-login.microsoftonline.de
-msft.sts.microsoft.com
+	- login.live.com
+	- login.windows.net
+	- login.microsoftonline.com
+	- login-us.microsoftonline.com
+	- login.chinacloudapi.cn
+	- login.microsoftonline.de
+	- msft.sts.microsoft.com
 
-to the 'Domain List' in the Alexa Skill.
+	to the 'Domain List' in the Alexa Skill.
 
 8. Check that there have been no changes in the account linking implementation (on either side) since my creation of the skill in March 2017. You'll have to compensate for any changes yourself. If Microsoft has updated its https certificate this could temporarily cause errors, as a certificate from an Amazon approved CA authority is required.
 
@@ -228,15 +226,27 @@ Once you've downloaded postman:
 
 - Set the Authorisation type to OAuth 2.0
 - Click 'Get a token'.
-- The Auth URL is `https://login.microsoftonline.com/common/oauth2/v2.0/authorize`. t
+- The Auth URL is `https://login.microsoftonline.com/common/oauth2/v2.0/authorize`.
 - The Token URL is `https://login.microsoftonline.com/common/oauth2/v2.0/token`
 - The ID and Secret are the Client ID and Secret of the 'Alexa Room Finder' App. This is registered under 'alexa@turing.ac.uk', in the [Microsoft App Dev Portal](https://apps.dev.microsoft.com/#/appList).
-- The scope is `offline_access calendars.readwrite.shared`
+- The scope is `offline_access calendars.readwrite`
 - The Grant Type is Authorization Code.
 
 To get a working token through Postman, you'll also need to temporarily change the redirect URL of the Microsoft App to the one specified by Postman. This means logging in as 'alexa@turing.ac.uk' at the [Microsoft App Dev Portal](https://apps.dev.microsoft.com/#/appList) and changing the redirect URL of the Alexa Room Finder app to the Callback URL specified in the Postman App. Make sure to change it back when you're done.
 
-Once you have a functional token, use it to make any API Requests you want to test through Postman, or copy its 'access_token' field into `test/config.js` to test by lambda-local. See the README for more info on this.
+Once you have a functional token, use it to make any API Requests you want to test through Postman, or copy its 'access_token' field into `test/test-config.js` to test by lambda-local. See the README for more info on this.
+
+## Debugging Code [WIP]
+
+See this section if you've worked out it's a problem with the code after checking the other sections. This obviously cannot explain how to solve bugs, but will give you my ideas of how to go about it.
+
+- First of all, definitely have a look through the other documentation I've provided. This can help to explain how the set-up has been done, how alexa-sdk module actually works, the alexa-sdk API, and how Room Finder itself actually works.
+
+- Use lambda-local, or invoke the actual lambda function, as regularly as possible. Lambda-local gives fairly good error messages, means you don't have to zip and upload between tests, which massively speeds up the process. It also doesn't use up lambda requests, so is free. I suggest running `bash run_tests.sh` before every upload to lambda, just to check its all functional.
+
+- Use commands or gulp to update. Running `automation/update_lambda.sh` or just running `gulp` (assuming you've installed gulp and configured AWS Lambda) will be far faster than manually compressing and uploading a zip file to Lambda.
+
+- Errors are most likely to occur with the requesters. There are specific files to test/debug these in `test/requesters.js`.
 
 ## Want to add/change rooms?
 
@@ -246,6 +256,6 @@ Then make sure you share the room calendar with alexa@turing.ac.uk, by following
 
 Then look at the instructions in the README under 'Automating Lambda Function Creation and Configuration'. Follow the first step, to set up the AWS CLI for the Amazon Account we're using to host Lambda. Now, just make sure you've saved your new `lambda/config.js`, then run `bash update_lambda.sh` from the automation directory.
 
-## Some thing Alexa says sounds dumb/unnatural?
+## Something Alexa says sounds dumb or unnatural?
 
 This can happen as they update Alexa. You can edit everything that's said in `lambda/resources.js`. You can also add a German translation. If you want.

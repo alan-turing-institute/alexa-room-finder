@@ -2,7 +2,7 @@
 
 This is intended to explain how the code behind my Room Finder skill works, for maintenance purposes.
 
-I'd like to think it's already a bit better commented and documented than the SDK, but it's a lot simpler too...
+I'd like to think it's already a bit better commented and documented than the SDK, but it's a lot simpler too.
 
 # The Alexa SDK API
 
@@ -74,7 +74,7 @@ Here's the conversation tree that Room Finder uses:
 
 Simply put, first it asks the user if they want to book a room, then it asks them how long, then it asks them to confirm the booking. Follow right down the center of the tree for the main functionality.
 
-This requires two custom intents, one called BookIntent (which is both used to ask to book, and to confirm a booking), and one called DurationIntent. The code should also support all the specified built-in intents.
+This requires two custom intents, one called BookIntent (which is both used to ask to book, and to confirm a booking), and one called DurationIntent. The handlers should also support all the specified built-in intents.
 
 All the states are set up and registered as handlers in `lambda/index.js`.
 
@@ -89,25 +89,25 @@ For abstraction, my code is split into four files. If you want to maintain this 
 
 ## Non-Intent Handlers
 
-In order to make my code easier to read and debug, I made `nonIntentHandlers`, which are registered with the Intent Handlers, but which don't handle intents. For that reason, I prefaced all of them with a `:` just like the SDK does. Here is documentation for them:
+In order to make my code easier to read and debug, I made `nonIntentHandlers`, which are registered with the Intent Handlers, but which don't handle intents. For that reason, I prefaced all of them with a `:` just like the SDK does its preregistered intents. Here is the documentation for them:
 
 - `:askHandler` - takes a `speechOutput` and a `repromptSpeech`. It stores these as session attributes, then calls `this.emit(':ask')` using the parameters above. This means that the last speech outputs are easily registered as session attributes, which allows Alexa to repeat itself. Can totally replace `this.emit(':ask')`.
 
 - `:repeatHandler` - takes no parameters. Very simply calls `this.emit(':ask')` using the session attributes for the last things said.
 
-- `:startOverHandler` - takes no parameters. Sets the state to an empty string (using the workaround detailed above), resets the attributes to undefined, then emits a `LaunchRequest`. Effectively resets the code.
+- `:startOverHandler` - takes no parameters. Sets the state to an empty string (using the workaround detailed above), resets all the attributes to undefined, then emits a `LaunchRequest`. Effectively resets the session.
 
-- `:errorHandler` - takes one 'error' parameter. Designed to report all request errors. I suggest editing this one if you want to log errors in a different way. It both logs errors in the console, and puts them on a card to be seen in the Alexa app/web-app.
+- `:errorHandler` - takes one 'error' parameter. Designed to report all request errors. Feel free to edit this one if you want to log errors in a different way. It both logs errors in the console, and puts them on a card to be seen in the Alexa app/web-app.
 
 *All the remaining nonIntentHandlers are called successively by DurationIntent in TimeMode. Each one handles a different stage of the room finding process.*
 
-- `:durationHandler` - takes a ISO-8601 duration parameter. Checks if it's valid, and not too long, then stores the start time, end time and duration as attributes. It then emits `:getRoomHandler`...
+- `:durationHandler` - takes a ISO-8601 duration parameter. Checks if this parameter is valid, and not over 2 hours, then stores the start time, end time and duration as attributes. It then emits `:getRoomHandler`...
 
-- `:getRoomHandler` - uses stored attributes to find a free room, then stores its credentials as attributes. It then emits `:roomFoundHandler`...
+- `:getRoomHandler` - uses the attributes stored by `:durationHandler` to find a free room, then stores its credentials as attributes. It then emits `:roomFoundHandler`, passing the crendentials to it...
 
-- `:roomFoundHandler` - checks if valid room was found, and if so changes the state to CONFIRMMODE.
+- `:roomFoundHandler` - uses the passed credentials to check if a valid room was found, and if so changes the state to CONFIRMMODE and emits an appropriate `':ask'` event.
 
-**All the other handlers are the intent handlers.**
+**All the other handlers are just intent handlers, to make up the conversation tree above.**
 
 ## Requesters
 
@@ -115,11 +115,11 @@ The `lambda/requesters.js` file contains a set of functions that make requests t
 
 All these functions also use the [request](https://github.com/request/request) module to make their API request.
 
-#### getCalendars(token)
+#### `getCalendars(token)`
 
 Passed a token, this just returns an promise resolved to an object showing the calendars in the default calendar list of the user, or it rejects with an error. The default calendar list of the user must include the meeting rooms, so they much be explicitly shared with Alexa's account.
 
-#### findFreeRoom(token, startTime, endTime, names, parsedCals)
+#### `findFreeRoom(token, startTime, endTime, names, parsedCals)`
 
 Passed a token, times formatted as values, the array of names of meeting rooms, and the object returned by getCalendars, this returns the a promise resolved to the key credentials of the first free room it finds.
 
@@ -136,13 +136,13 @@ It does this by looping through the `parsedCals` object. For each calendar:
       name: "string", // e.g. Meeting Room 1.0
     }
     ```
- - If all calendars either aren't in `names`, aren't `free`, or return errors, it rejects.
+ - If all calendars either aren't in `names`, aren't `free`, or return errors, it returns a promise resolved to `false`.
 
  API requests are done asynchronously.
 
- Note on the findFreeRoom method: This function is fairly manual in how it works out which of the calendars are available - it uses a simple counter, and if they're all unavailable it returns false. One could use `Q.any()` for almost the same effect, but I did this, and unless you further complicate the code, it gives much worse error messages. It requires me to reject calendars that are busy, rather than just rejecting errors; thus my code allows differentiation between errors and unavailability which `Q.any()` doesn't. The other alternative is `Q.allSettled()` but that requires every API request to finish before the code returns, which worsens performance.
+ Note on `findFreeRoom`'s' method: This function is fairly manual in how it works out which of the calendars are available - it uses a simple counter, and if they're all unavailable it resolves to false. One could use `Q.any()` for almost the same effect, but I did this, and unless you further complicate the code, it gives much worse error messages. It requires you to reject calendars that are busy, rather than just rejecting errors; thus my code allows differentiation between errors and unavailability which `Q.any()` doesn't. The other alternative is `Q.allSettled()` but that requires every API request to finish before the code returns, which worsens performance.
 
-#### postRoom(token, ownerAddress, ownerName, startTime, endTime)
+#### `postRoom(token, ownerAddress, ownerName, startTime, endTime)`
 
 Passed a token, an address to make a calendar on, the name of that calendar, and the same start time and end time as passed eariler, this posts a room.
 
