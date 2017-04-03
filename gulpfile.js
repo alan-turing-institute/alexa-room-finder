@@ -3,9 +3,16 @@ const babili = require('gulp-babili');
 const del = require('del');
 const zip = require('gulp-zip');
 const lambda = require('gulp-awslambda');
+const eslint = require('gulp-eslint');
 
 gulp.task('clean', function clean() {
   return del(['./build']);
+});
+
+gulp.task('lint', () => {
+  return gulp.src(['lambda/*.js', '!node_modules/**'])
+    .pipe(eslint())
+    .pipe(eslint.format());
 });
 
 gulp.task('minify', ['clean'], function minify() {
@@ -30,4 +37,4 @@ gulp.task('upload', ['makeZip'], function upload() {
   .pipe(lambda('RoomFinder', { region: 'eu-west-1' }));
 });
 
-gulp.task('default', ['upload']);
+gulp.task('default', ['upload', 'lint']);
