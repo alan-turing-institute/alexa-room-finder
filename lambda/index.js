@@ -264,8 +264,8 @@ const nonIntentHandlers = {
     } else {
       // Asks again if no rooms are available for the specified time.
       this.emit(':askHandler',
-        this.t('TIME_UNAVAILABLE_MESSAGE', this.attributes.duration),
-        this.t('TIME_UNAVAILABLE_REPROMPT', this.attributes.duration));
+        this.t('TIME_UNAVAILABLE_MESSAGE', Math.ceil(parseFloat(this.attributes.duration))),
+        this.t('TIME_UNAVAILABLE_REPROMPT', Math.ceil(parseFloat(this.attributes.duration))));
     }
   },
   ':startOverHandler': function startOverHandler() {
