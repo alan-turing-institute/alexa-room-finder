@@ -1,4 +1,4 @@
-# Room Finder Maintenance Documentation [Draft 1]
+# Room Finder Maintenance Documentation [Draft 1.1]
 
 This is intended to explain how the code behind my Room Finder skill works, for maintenance purposes.
 
@@ -6,9 +6,9 @@ I'd like to think it's already a bit better commented and documented than the SD
 
 # The Alexa SDK API
 
-This brief section is intended to help you use the Alexa SDK Node Module without understanding the whole backend. First, do check out Amazon's basic [SDK documentation](https://github.com/alexa/alexa-skills-kit-sdk-for-nodejs). You will also likely need the context of the overall [Alexa documentation.](https://developer.amazon.com/public/solutions/alexa/alexa-skills-kit/getting-started-guide). If you want to know how the backend works check out my backend documentation.
+This brief section is intended to help you use the Alexa SDK Node Module without understanding exactly what's up under the hood. First, do check out Amazon's basic [SDK documentation](https://github.com/alexa/alexa-skills-kit-sdk-for-nodejs). You will also likely need the context of the overall [Alexa documentation.](https://developer.amazon.com/public/solutions/alexa/alexa-skills-kit/getting-started-guide). If you want to know how the SDK works on the backend check out my alexa-sdk documentation.
 
-To just summarize their documentation, the Alexa SDK works on an 'listener' system, where it sets up a handler (which is actually an extension of a Node [EventEmitter](https://nodejs.org/api/events.html)) that listens for particular events, then 'emits' other events in response. You set up the intents to listen for, then emit an event in response. They have a preregistered set of listeners (`':tell'`, `':ask'`, `':askWithCard'`, `':tellWithCard'`, `':tellWithLinkAccountCard'`, `':askWithLinkAccountCard'`, `':responseReady'`, `':saveState'`, and `':saveStateError'`) that you can emit to. These will push the parameters you give them to Alexa, and sort all the other values for you. It will only work in AWS Lambda.
+To just summarize their documentation, the Alexa SDK works on an 'listener' system, where it sets up a handler (which is actually an extension of a Node [EventEmitter](https://nodejs.org/api/events.html)) that listens for particular events, then 'emits' other events in response. You set up the intents to listen for, then emit an event in response. They have a preregistered set of listeners (`':tell'`, `':ask'`, `':askWithCard'`, `':tellWithCard'`, `':tellWithLinkAccountCard'`, `':askWithLinkAccountCard'`, `':responseReady'`, `':saveState'`, and `':saveStateError'`) that you can emit to. These will push the parameters you give them to Alexa, and sort the rest of the response object for you. It will only work in AWS Lambda.
 
 Now some details that I think are poorly covered by documentation.
 
@@ -30,7 +30,7 @@ No. I use a bunch of listeners that aren't intents in Room Finder, just to neate
 
 #### What does `this` refer to in my functions? Maybe the individual handler, or the EventEmitter?
 
-***None of the above.*** It refers to a 'handlerContext' object, which is defined in the SDK backend. If you want the real details of what you can access through this variable, I'd suggest reading the backend documentation I've written up. Here's the basics - when reading this, assume `this` refers to the overall 'handler' whenever used.
+***None of the above.*** It refers to a 'handlerContext' object, which is defined in the SDK backend. If you want the real details of what you can access through this variable, I'd suggest reading the backend documentation I've written up. Here's the basics - when reading this, assume `this` refers to the overall `handler` object whenever used.
 
 ```
 on: this.on.bind(this),
@@ -51,7 +51,7 @@ response: ResponseBuilder(this) // Function that returns a function to generate 
 
 #### Why can't I reset the state to the default state, an empty string?
 
-There's a bug in the SDK that prevents this. I've submitted a pull request, so I'm hoping they fix it some way or another. In order to workaround this, instead of just putting `this.handler.state =""`, put both these lines:
+At time of writing, there's a bug in the SDK that prevents this. I've submitted a pull request, so I'm hoping they fix it some way or another. In order to workaround this, instead of just putting `this.handler.state =""`, put both these lines:
 
 ```
 this.handler.state = "";
@@ -74,13 +74,15 @@ Here's the conversation tree that Room Finder uses:
 
 Simply put, first it asks the user if they want to book a room, then it asks them how long, then it asks them to confirm the booking. Follow right down the center of the tree for the main functionality.
 
+This requires two custom intents, one called BookIntent (which is both used to ask to book, and to confirm a booking), and one called DurationIntent. The code should also support all the specified built-in intents.
+
 All the states are set up and registered as handlers in `lambda/index.js`.
 
 ## Files
 
 For abstraction, my code is split into four files. If you want to maintain this structure, please follow these concepts:
 
-- `lambda/index.js` should contain all the main event handlers, and is what is called by AWS Lambda.
+- `lambda/index.js` should contain all the main intent handlers, and is what is called by AWS Lambda.
 - `lambda/requesters.js` should contain all the functions that make requests to the MS Graph API.
 - `lambda/resources.js` should contain all strings used by index.js. (There are a couple of unviewed strings not stored here, in `lambda/requesters.js`.)
 - `lambda/config.js` should contain all the values that need to be set to reconfigure it to work for a different business. I'm pleased that this is now only the App ID, and the names of the Meeting Rooms.
@@ -105,7 +107,7 @@ In order to make my code easier to read and debug, I made `nonIntentHandlers`, w
 
 - `:roomFoundHandler` - checks if valid room was found, and if so changes the state to CONFIRMMODE.
 
-All the other handlers are used by various intents.
+**All the other handlers are the intent handlers.**
 
 ## Requesters
 
@@ -138,10 +140,10 @@ It does this by looping through the `parsedCals` object. For each calendar:
 
  API requests are done asynchronously.
 
- Note on method: This function is fairly manual in how it works out which of the calendars are available - it uses a simple counter, and if they're all unavailable it returns false. One could use `Q.any()` for almost the same effect, but I did this, and unless you further complicate the code, it gives much worse error messages. It requires me to reject calendars that are busy, rather than just rejecting errors; thus my code allows differentiation between errors and unavailability which `Q.any()` doesn't. The other alternative is `Q.allSettled()` but that would require every API request to finish before the code returns, which would worsen performance.
+ Note on the findFreeRoom method: This function is fairly manual in how it works out which of the calendars are available - it uses a simple counter, and if they're all unavailable it returns false. One could use `Q.any()` for almost the same effect, but I did this, and unless you further complicate the code, it gives much worse error messages. It requires me to reject calendars that are busy, rather than just rejecting errors; thus my code allows differentiation between errors and unavailability which `Q.any()` doesn't. The other alternative is `Q.allSettled()` but that requires every API request to finish before the code returns, which worsens performance.
 
 #### postRoom(token, ownerAddress, ownerName, startTime, endTime)
 
-Passed a token, an address to make a calendar on, the name of that calendar, and the same start time and end time, this posts a room.
+Passed a token, an address to make a calendar on, the name of that calendar, and the same start time and end time as passed eariler, this posts a room.
 
 It **does not directly write on the room resource calendar.** It instead posts an event on Alexa's calendar, and invites the room using the address provided. The benefit of this is that your account requires fewer permissions. The problem is it relies on the rooms accepting the invites.
