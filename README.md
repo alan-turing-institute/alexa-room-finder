@@ -175,7 +175,7 @@ Before you start this process, make sure to set the values in config.js. Change 
 
 ## Gulp
 
-You can also update the lambda function using gulp, which is easier and provides a neater build than the shell. It will also minify the code, and create build and package folders. To do this, first install [gulp](gulpjs.com), and the dev dependencies for the overall skill - not the lambda. Then just run `gulp` from the root directory, and it will fully update for you. Other gulp commands are `clean`, `minify`, `move_modules`, `zip`, and `upload`. I will probably also build a gulp watcher soon.
+You can also update the lambda function using gulp, which is easier and provides a neater build than the shell. It will also lint, then minify the code, and create build and package folders. To do this, first install [gulp](gulpjs.com), and the dev dependencies for the overall skill - not the lambda. Then just run `gulp` from the root directory, and it will fully update for you. Other gulp commands are `lint`, `clean`, `minify`, `move_modules`, `zip`, and `upload`. 
 
 ## ESLint
 
