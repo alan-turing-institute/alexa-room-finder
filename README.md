@@ -213,7 +213,7 @@ Then, provided you install lambda-local globally (`(sudo) npm install -g lambda-
 
 ## Testing with Mocha
 
-I've combined [mocha](https://mochajs.org/) and [lambda-local](https://www.npmjs.com/package/lambda-local) to create a practical testing package. Currently it only tests that a response is sent, not that the response is right, but it does log the responses so you can read them. In order to use it, first make sure you have the dev-dependencies of the overall repo installed - particularly `mocha` and `lambda-local`. Then just run `./node_modules/mocha/bin/mocha` from the root. You can just use `mocha` if you have mocha installed globally.
+I've combined [mocha](https://mochajs.org/) and [lambda-local](https://www.npmjs.com/package/lambda-local) to create a practical testing package. Currently it only tests that a response is sent, not that the response is right, but it does log the responses so you can read them. In order to use it, first make sure you have the dev-dependencies of the overall repo installed - particularly `mocha` and `lambda-local`. Then just run `npm test` or `./node_modules/mocha/bin/mocha` from the root. You can just use `mocha` if you have mocha installed globally.
 
 **NB: At present, if there's an error with getting or posting to the Graph API, mocha still reports the 'build passing'. This is because I want these specific errors to be handled neatly by my Alexa Skill now we're in production; as it therefore emits to the skill successfully, no error is reported to Mocha. If you have an issue with booking, read the responses logged by Mocha and look for responses containing error cards.**
 

@@ -8,7 +8,7 @@ Before you read this, have a scan through the README, so you understand how set-
 
 - Before you do anything else, check that the accounts are linked. The accounts occasionally like to unlink on Amazon updates, so this is a very common error, and doesn't always cause the same bug. This is therefore the first step of every fix below.
 
-- Fast testing and updating are key when testing this code. Use lambda-local obsessively when making changes. Use gulp for quick updates.
+- Fast testing and updating are key when testing this code. Use lambda-local or mocha obsessively when making changes. Use gulp for quick updates.
 
 ## It says "There was a problem with the requested skill's response" on opening the Skill!
 
@@ -27,7 +27,7 @@ This was my most common error. It means the AWS Lambda has either failed to retu
 
 	NB: If you get timeouts that can often mean there's a problem with the requesters. Try testing those with the files in `test/requesters`.
 
-4. In fixing, test with lambda-local. See the "Testing Lambda Code Locally" section for help with this.
+4. In fixing, test with lambda-local. See the "Testing Lambda Locally" section for help with this.
 
 #### Other things you might want to check
 
@@ -89,7 +89,7 @@ This means that there was quite specifically an error with a request to the Grap
 
 		If one of these doesn't work, it very could mean that something has changed on Microsoft's end, or with the [request](https://github.com/request/request) module. Try to find what's changed - you may need to replace the endpoint, or to update the exact parameters.
 
-4. If the APIs and endpoints are all functional, then there's a new problem in the code, or the way the code is doing it. First follow the steps under 'Testing Lambda Code Locally', as this can probably get you a better stack trace, and a specific point where the code is breaking. We're specifically interested in the tests for BookIntent_CONFIRMMODE and DurationIntent_TIMEMODE, as they make the API requests.
+4. If the APIs and endpoints are all functional, then there's a new problem in the code, or the way the code is doing it. First follow the steps under 'Testing Lambda Locally', as this can probably get you a better stack trace, and a specific point where the code is breaking. We're specifically interested in the tests for BookIntent_CONFIRMMODE and DurationIntent_TIMEMODE, as they make the API requests.
 
 5. All the code for the API requests is stored in `requesters.js`. I have tests for these set up in `test/requesters`. Run that code (making sure to set the token in `test/test-config.js` first).
 
@@ -169,15 +169,15 @@ However, if you notice a lag/skip of one hour in detecting free rooms or booking
 
 You can check what timezone an event is in by making a GET request to `https://graph.microsoft.com/v1.0/Users/Me/Calendars/{CALENDAR-ID-GOES-HERE}/events`, then looking at the various timezone fields available. If you want to change the timezone that is used by Alexa, then edit the way dates are made in `:durationHandler` in `lambda/index.js`, and the timezone used by `postRoom()` in `lambda/requesters.js`. Note that there's a difference between `Date()` and `new Date()`, because JavaScript.
 
-## Testing Lambda Code Locally
+## Testing Lambda Locally
 
 [lambda-local](https://github.com/ashiina/lambda-local) is a very useful debug tool - especially if you're getting API errors is testing by lambda-local.
 
 - First, you need to follow the steps in Postman Help, to get a token.
 - Then clone the repo locally.
-- When you have a token and a local repo to edit, follow the steps in the README under 'Testing The Lambda Function Locally' to start testing. If you're resolving an error with a particular intent, run `lambda-local -l lambda/index.js -h handler -e test/filename.js`. The first two commands in `bash run_tests.sh` are the ones that access the MS Graph API, so are likely the specific ones to test.
+- When you have a token and a local repo to edit, follow the steps in the README under 'Testing with lambda-local' to start testing. If you're resolving an error with a particular intent, run `lambda-local -l lambda/index.js -h handler -e test/filename.js`. The first two commands in `bash run_tests.sh` are the ones that access the MS Graph API, so are likely the specific ones to test.
 
-If you want to check that every intent works, run `bash run_tests.sh`.
+- If you want to rapidly check every intent, just make sure you have [mocha](https://mochajs.org/) installed locally and run `npm test`. Alternatively you can just run `mocha` if you have mocha installed globally.
 
 ## Problems with Account Linking
 

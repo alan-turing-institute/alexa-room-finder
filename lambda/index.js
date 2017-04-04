@@ -281,7 +281,8 @@ const nonIntentHandlers = {
       this.t('ERROR'),
       this.t('ERROR_CARD_TITLE'),
       error);
-    console.error(`There was an error: ${error}`);
+    console.info("An error occurred:");
+    console.error(error);
   },
 };
 

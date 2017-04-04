@@ -30,6 +30,10 @@ printf '\n Intent: Cancel \t State: _CONFIRMMODE \n\n'
 lambda-local -l lambda/index.js -h handler -e test/requests/CancelIntent-State_CONFIRMMODE.js
 printf '\n Intent: Cancel \t State: _TIMEMODE \n\n'
 lambda-local -l lambda/index.js -h handler -e test/requests/CancelIntent-State_TIMEMODE.js
+printf '\n Intent: Duration \t State: Blank \n\n'
+lambda-local -l lambda/index.js -h handler -e test/requests/DurationIntent-State_BLANK.js
+printf '\n Intent: Duration \t State: _TIMEMODE \n\n'
+lambda-local -l lambda/index.js -h handler -e test/requests/DurationIntent-State_CONFIRMMODE.js
 printf '\n Intent: Help \t State: Blank \n\n'
 lambda-local -l lambda/index.js -h handler -e test/requests/HelpIntent-StateBLANK.js
 printf '\n Intent: Help \t State: _CONFIRMMODE \n\n'
