@@ -1,16 +1,18 @@
 const gulp = require('gulp');
 const babili = require('gulp-babili');
-const del = require('del');
 const zip = require('gulp-zip');
 const lambda = require('gulp-awslambda');
 const eslint = require('gulp-eslint');
+const clean = require('gulp-clean');
 
-gulp.task('clean', function clean() {
-  return del(['./build']);
+gulp.task('clean', function () {
+  return gulp.src('./build', { read: false })
+    .pipe(clean());
 });
 
-gulp.task('lint', () => {
-  return gulp.src(['lambda/*.js', '!node_modules/**'])
+// This task requires an .eslintrc.json file.
+gulp.task('lint', function lint() {
+  return gulp.src(['./lambda/*.js', '!node_modules/**'])
     .pipe(eslint())
     .pipe(eslint.format());
 });

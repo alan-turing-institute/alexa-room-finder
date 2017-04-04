@@ -175,11 +175,11 @@ Before you start this process, make sure to set the values in config.js. Change 
 
 ## Gulp
 
-You can also update the lambda function using gulp, which is easier and provides a neater build than the shell. It will also lint, then minify the code, and create build and package folders. To do this, first install [gulp](gulpjs.com), and the dev dependencies for the overall skill - not the lambda. Then just run `gulp` from the root directory, and it will fully update for you. Other gulp commands are `lint`, `clean`, `minify`, `move_modules`, `zip`, and `upload`. 
+You can also update the lambda function using gulp, which is easier and provides a neater build than the shell. It will also lint, then minify the code, and create build and package folders. To do this, first install [gulp](gulpjs.com), and the dev dependencies for the overall skill - not the lambda. Then just run `gulp` from the root directory, and it will fully update for you. Other gulp commands are `lint`, `clean`, `minify`, `move_modules`, `zip`, and `upload`.
 
 ## ESLint
 
-I generally use [ESLint](http://eslint.org/), and specifically use the [airbnb](https://github.com/airbnb/javascript) style guide. This is how the project is set up, and most of my code follows this style guide, with the exception of a few rules. You can see my lint config and change it in `package.json` if you want.
+I generally use [ESLint](http://eslint.org/), and specifically use the [airbnb](https://github.com/airbnb/javascript) style guide. This is how the project is set up, and most of my code follows this style guide, with the exception of a few rules. You can see my lint config and change it in `package.json` and `eslintrc.json` if you want.
 
 ## Doing the account link
 

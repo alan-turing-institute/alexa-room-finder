@@ -20,13 +20,13 @@
   },
   "homepage": "https://github.com/alan-turing-institute/alexa-room-booker#readme",
   "devDependencies": {
-    "del": "^2.2.2",
     "eslint": "^3.19.0",
     "eslint-config-airbnb-base": "^11.1.2",
     "eslint-plugin-import": "^2.2.0",
     "gulp": "^3.9.1",
     "gulp-awslambda": "^0.4.0",
     "gulp-babili": "0.0.2",
+    "gulp-clean": "^0.3.2",
     "gulp-eslint": "^3.0.1",
     "gulp-rename": "^1.2.2",
     "gulp-zip": "^4.0.0"
