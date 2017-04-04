@@ -1,18 +1,6 @@
+const config = require('../test-config');
 
-/**
- * @file Tests the lambda code, using the lambda-local package. To be run with node from the terminal.
- * You may need to install lambda-local, using 'npm install lambda-local'. If you do a global install (i.e. 'sudo npm install -g lambda-local') you can also test the lambda code using the console.
- *
- * NB: test-config.js must first be edited to contain a token for this code to work. Otherwise it will return a JSON parsing error.
- */
-
-const lambdaLocal = require('lambda-local');
-
-const config = require('../test-config'); // config.js contains the token.
-
-// This is the JSON payload to send to Lambda.
-// This one is sent when the user first agrees to book.
-const jsonPayload = {
+module.exports = {
   "session": {
     "sessionId": "",
     "application": {
@@ -41,11 +29,3 @@ const jsonPayload = {
   },
   "version": "1.0",
 };
-
-// Main
-lambdaLocal.execute({
-  event: jsonPayload,
-  lambdaPath: '../lambda/index.js',
-  profileName: 'default',
-  timeoutMs: 3000,
-});

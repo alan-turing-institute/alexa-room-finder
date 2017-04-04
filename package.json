@@ -29,7 +29,8 @@
     "gulp-clean": "^0.3.2",
     "gulp-eslint": "^3.0.1",
     "gulp-rename": "^1.2.2",
-    "gulp-zip": "^4.0.0"
+    "gulp-zip": "^4.0.0",
+    "lambda-local": "^1.4.2"
   },
   "eslintConfig": {
     "extends": "airbnb-base",

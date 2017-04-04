@@ -209,7 +209,7 @@ module.exports = {
 }
 ```
 
-Then, provided you install lambda-local globally (`(sudo) npm install -g lambda-local`), you can test intents from the console using this command: `lambda-local -l lambda/index.js -h handler -e test/filename.js` where filename is the JSON request you want to test. I've created test JSONs for all of the available intents. The most important intent to test is the BookIntent from every state, as that is the only intent that directly accesses the Office API.
+Then, provided you install lambda-local globally (`(sudo) npm install -g lambda-local`), you can test intents from the console using this command: `lambda-local -l lambda/index.js -h handler -e test/requests/filename.js` where filename is the JSON request you want to test. I've created test JSONs for all of the available intents. The most important intent to test is the BookIntent from every state, as that is the only intent that directly accesses the Office API.
 
 I've also included a useful shell script, so if you do install lambda-local globally, you can just run that using `bash run_tests.sh`; this will test every possible intent, and is probably the quickest way to check that everything is running before deployment. This is also the script that `npm test` will run (if you run it from the root directory.) If you get any errors, then you need to worry. Don't be surprised at a few 'Unhandled' responses though - those are meant to happen if you ask the skill to 'Start Over' from the beginning!
 
