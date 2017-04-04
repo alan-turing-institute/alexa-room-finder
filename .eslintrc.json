@@ -1,10 +1,12 @@
 {
   "extends": "airbnb-base",
   "plugins": [
-    "import"
+    "import",
+    "mocha"
   ],
   "rules": {
     "strict": "off",
-    "quotes": "off"
+    "quotes": "off",
+    "mocha/no-exclusive-tests": "error"
   }
 }
