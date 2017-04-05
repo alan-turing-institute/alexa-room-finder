@@ -11,15 +11,14 @@ const Q = require('q');
 const requesters = {}; // Requesters object to export - 'require'd by index.js
 
 /**
- * requesters.postRoom - given a token and the owner of the room calendar,
- * this books a new event on my calendar, inviting the room.
+ * requesters.postRoom - Book a new event on a calendar using parameters as time.
  *
- * @param  {string} token       The JWT access token provided by the Alexa Skill.
- * @param  {string} ownerAddress       Address of owner of calendar to be booked.
- * @param  {string} ownerName   Name of owner of calendar to be booked.
- * @param  {string} startTime   Start time of meeting to post, formatted as ISO-8601 string.
- * @param  {string} endTime     End time of meeting to post, formatted as ISO-8601 string.
- * @return {promise}            Promise resolved to nothing.
+ * @param  {string} token          The JWT access token provided by the Alexa Skill.
+ * @param  {string} ownerAddress   Address of owner of calendar to be booked.
+ * @param  {string} ownerName      Name of owner of calendar to be booked.
+ * @param  {string} startTime      Start time of meeting to post, formatted as ISO-8601 string.
+ * @param  {string} endTime        End time of meeting to post, formatted as ISO-8601 string.
+ * @return {promise}               Promise resolved to nothing.
  */
 requesters.postRoom = function postRoom(token, ownerAddress, ownerName, startTime, endTime) {
   const deferred = Q.defer();
@@ -79,7 +78,7 @@ requesters.postRoom = function postRoom(token, ownerAddress, ownerName, startTim
 
 
 /**
- * requesters.getCalendars - retrieves all of user's calendars from Office 365
+ * requesters.getCalendars - Retrieve all of user's calendars from API
  *
  * @param  {string} token The JWT access token provided by the Alexa Skill
  * @return {promise}      Promise resolved to JSON containing all calendars.
@@ -111,14 +110,14 @@ requesters.getCalendars = function getCalendars(token) {
 };
 
 /**
- * requesters.findFreeRoom - finds a free room, given calendars to check, start time and end time.
+ * requesters.findFreeRoom - Find a free calendar, given particular calendars to check.
  *
  * @param  {string} token       The JWT access token provided by the Alexa Skill
- * @param  {string} startTime   The start time of the period to check, formatted as ISO-8601 string.
- * @param  {string} endTime     The end time of the period to check, formatted as ISO-8601 string.
- * @param  {array} names  Array containing the names of all calendars to search for
- * @param  {object} parsedCals  JSON containing all calendars returned by requesters.
- * @return {promise}            Promise resolved to JSON object: ownerName, ownerAdress, name.
+ * @param  {string} startTime   The start time of the period to check, formatted as ISO-8601 string
+ * @param  {string} endTime     The end time of the period to check, formatted as ISO-8601 string
+ * @param  {string[]} names     Array containing the names of all calendars to search for
+ * @param  {Object} parsedCals  JSON containing all calendars returned by requesters
+ * @return {promise}            Promise resolved to JSON object: ownerName, ownerAdress, name
  */
 requesters.findFreeRoom = function findFreeRoom(token, startTime, endTime, names, parsedCals) {
   const deferred = Q.defer();

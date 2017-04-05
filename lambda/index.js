@@ -1,7 +1,7 @@
 /**
  * @file Main Alexa Skill handling code. Ensure handler is index.handler (which is default)
- * in order to call this as the opening of the file. Must be zipped with requesters.js, and
- * appropriate node_modules in order to work.
+ * in order to call this as the opening of the file. Must be zipped with all other .js files
+ * in lambda directory.
  * @summary Handles Alexa skill.
  */
 
@@ -15,14 +15,14 @@ const resources = require('./resources');
 
 // Object of all states to be used by the code.
 const states = {
-  CONFIRMMODE: '_CONFIRMMODE', // Initiated by BookIntent, when user asks to book, and an available room is found.
-  TIMEMODE: '_TIMEMODE',
+  CONFIRMMODE: '_CONFIRMMODE', // Initiated by DurationIntent_TIMEMODE, when an available room is found.
+  TIMEMODE: '_TIMEMODE', //Initiated by BookIntent, when a user asks to book.
 };
 
 /**
- * resetAttributes - resets all non-state attributes to undefined
+ * resetAttributes - resets all attributes except state to undefined
  *
- * NB: Must be bound to the correct this
+ * NB: Must be bound to the correct this.
  */
 function resetAttributes() {
   this.attributes.ownerAddress = undefined;
@@ -91,15 +91,13 @@ const sessionHandlers = {
 
 /**
  * The set of handlers used to ask user how long they want to book the room for.
- *
- * states.TIMEMODE is appeneded to all the Intent names of this string.
  */
 const timeModeHandlers = Alexa.CreateStateHandler(states.TIMEMODE, {
   // Gives a different help message
   'AMAZON.HelpIntent': function HelpIntent() {
     this.emit(':askHandler',
-      this.t('TIME_HELP_MESSAGE', this.attributes.roomName),
-      this.t('TIME_HELP_REPROMPT', this.attributes.roomName));
+      this.t('TIME_HELP_MESSAGE'),
+      this.t('TIME_HELP_REPROMPT'));
   },
   // Repeats last messages
   'AMAZON.RepeatIntent': function RepeatIntent() {
@@ -196,6 +194,9 @@ const confirmModeHandlers = Alexa.CreateStateHandler(states.CONFIRMMODE, {
   },
 });
 
+/**
+ * Set of handlers that aren't intents.
+ */
 const nonIntentHandlers = {
   ':askHandler': function askHandler(speechOutput, repromptSpeech) {
     this.attributes.speechOutput = speechOutput;
@@ -286,9 +287,8 @@ const nonIntentHandlers = {
   },
 };
 
-/**
- * Main
- */
+
+// Main
 exports.handler = (event, context) => {
   const alexa = Alexa.handler(event, context); // See alexa.js in alexa-sdk package for definition.
   alexa.appId = config.appId; // App ID of Alexa skill, found on skill's page.
