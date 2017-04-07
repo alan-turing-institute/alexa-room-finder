@@ -1,4 +1,4 @@
-# How to: Azure Active Directory Authentication [Draft 1.0, WIP]
+# How to: Azure Active Directory Authentication [Draft 1.1, WIP]
 
 Active Directory Authentication gives an application access to the Microsoft Graph API, effectively giving them access to the whole Office 365 tenant, and the Azure Active Directory tenant. This makes it fairly powerful for making simple log-in to an application, securing Web APIs, and for automating certain Office tasks. This quick how-to will explain basic set-up. I assume some familiarity with basic http and OAuth2.
 
@@ -25,15 +25,15 @@ Before you can use the 2.0 endpoint, you need to set up an 'application registra
 
 - Go to [the Microsoft Developer Application Registration Portal](https://apps.dev.microsoft.com/#/appList) and log in with your Turing email. It should look something like this.
 
-!(App List)[]
+![App List](https://cloud.githubusercontent.com/assets/20475469/24797480/5bc6aff0-1b89-11e7-8c81-cd343d9ad2a6.png)
 
 - Click 'Add an App', then name it as you wish. It will take you to a page like this.
 
-!(App Page)[]
+![App Page](https://cloud.githubusercontent.com/assets/20475469/24797481/5d77a106-1b89-11e7-8ef7-cff92ed6665e.png)
 
 - Click 'Generate new password' to get a client secret. Make sure to store this somewhere secure.
 
-- Then add a platform - usually this will be web, if you're authenticating with any sort of web service.
+- Then add a platform - usually this will be 'Web', if you're authenticating with any sort of web service.
 
 - Then under 'Web', input the Redirect URIs. These are the URLS to which that it will send the authorization code, then the token. Note that at present these *have* to be https, but you can use localhost (with a port) if you want to send them to a locally hosted service. NB: If you want to add multiple subdomains from one URL, you must also put the master domain as one of the Redirect URIs. There is also a limit of about 21 redirect URIs total.
 
@@ -247,3 +247,7 @@ The body of the response will look exactly the same as before:
     "refresh_token": "{JWT_refresh_token_here}",
 }
 ```
+
+### Using the 1.0 endpoint
+
+In the works.
