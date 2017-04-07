@@ -3,7 +3,7 @@ const startDateTime = new Date();
 const endDateTime = new Date(startDateTime.getTime() + (durationInMinutes * 60000));
 
 module.exports = {
-  appId: "{same APP_ID as index.js}",
+  appId: "{same appId as lambda/config.js}",
   token: "{token}",
   startTime: startDateTime.toISOString(),
   endTime: endDateTime.toISOString(),

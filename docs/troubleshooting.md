@@ -14,32 +14,32 @@ Before you read this, have a scan through the README, so you understand how set-
 
 This was my most common error. It means the AWS Lambda has either failed to return something, returned something bad, or just generally all gone wrong. There are thousands of reasons this might happen.
 
-1. The most common cause of this will actually be an error with account linking, so the first thing to do is check that the accounts are still linked. Log into https://alexa.amazon.co.uk as the corporate account Alexa uses, then go to the skills section. Check if the 'Room Finder' skill is linked.
+1. The most common cause of this will actually be an error with account linking, so the first thing to do is check that the accounts are still linked. Log into https://alexa.amazon.co.uk as the account Alexa uses, then go to the skills section. Check if the 'Room Finder' skill is linked.
 	- If it isn't linked, link it to alexa@turing.ac.uk
 	- If it is linked, try 'Disabling' it and relinking it.
 	- If you get a failure on linking, refer to the 'Problems with Account Linking' section.  
 
 	If the linking is successful, test the skill again, and see if you still get an error. If you do, it's probably a problem with the lambda code. Look at the steps below.
 
-2. Still logged into https://alexa.amazon.co.uk (as the corporate account Alexa uses), go to the home section. You should hopefully see a card with the actual error. If the error is 'Skill response was marked as a failure: The target Lambda application returned a failure response' or 'Null Speechlet Response', then that confirms it's a lambda problem, so move to the next step. If there's some other error, then I'd first suggest googling the error message, and seeing if you can resolve it without code changes - especially if it's 'Alexa Skill', not Lambda, related.
+2. Still logged into https://alexa.amazon.co.uk (as the account Alexa uses), go to the home section. You should hopefully see a card with the actual error. If the error is 'Skill response was marked as a failure: The target Lambda application returned a failure response' or 'Null Speechlet Response', then that confirms it's a lambda problem, so move to the next step. If there's some other error, then I'd first suggest googling the error message, and seeing if you can resolve it without code changes - especially if it's 'Alexa Skill', not Lambda, related.
 
-3. Open the [AWS console](https://eu-west-1.console.aws.amazon.com/console/home?region=eu-west-1#), log in as the corporate account, then go to CloudWatch, then Logs. Open the logs for aws/lambda/RoomFinder. Review the most recent logs (the one marked with REPORT) to find the error. If it was a one-off error, you can find the specific RequestID that failed back at https://alexa.amazon.co.uk. It should provide a stack trace in the 'report' section. Find that, and google it, then refer to the 'Debugging code' section.
+3. Open the [AWS console](https://eu-west-1.console.aws.amazon.com/console/home?region=eu-west-1#), log in as the account, then go to CloudWatch, then Logs. Open the logs for aws/lambda/RoomFinder. Review the most recent logs (the one marked with REPORT) to find the error. If it was a one-off error, you can find the specific RequestID that failed back at https://alexa.amazon.co.uk. It should provide a stack trace in the 'report' section. Find that, and google it, then refer to the 'Debugging code' section.
 
 	NB: If you get timeouts that can often mean there's a problem with the requesters. Try testing those with the files in `test/requesters`.
 
-4. In fixing, test with lambda-local. See the "Testing Lambda Locally" section for help with this.
+4. In fixing this error, lambda-local/mocha will prove particularly helpful, as it's an error in the code. See the "Testing Lambda Locally" section for help with this.
 
 #### Other things you might want to check
 
 1. Check that the Alexa Skill is pointing to the right ARN/Region. It's possible (though there are very few ways this could happen) that the Skill is using the wrong endpoint/region for its requests. Open the [Alexa Skill Console](https://developer.amazon.com/edw/home.html#/skills/list), and check that the ARN and region match that of the Lambda function.  
 
-2. Check that the lambda code has the right App ID. It's also possible that the App ID doesn't match the Lambda function. This should be specifically reported as the error in CloudWatch. This is a bit harder to change, as you'll need to create a whole new deployment package. Clone the repo, then change the App ID in `config.js`. Then in the README, look at 'Automating Lambda Function Creation and Configuration'. Follow the first step, to set up the AWS CLI for the corporate account we're using to host Lambda. Now, make sure you've saved your new `lambda/config.js`, then run `bash update_lambda.sh` from the automation directory.
+2. Check that the lambda code has the right App ID. It's also possible that the App ID doesn't match the Lambda function. This should be specifically reported as the error in CloudWatch. This is a bit harder to change, as you'll need to create a whole new deployment package. Clone the repo, then change the App ID in `config.js`. Then in the README, look at 'Automating Lambda Function Creation and Configuration'. Follow the first step, to set up the AWS CLI for the account we're using to host Lambda. Now, make sure you've saved your new `lambda/config.js`, then run `bash update_lambda.sh` from the automation directory.
 
 ## The skill is saying an 'An error occurred', after being told how long to book for, or after you confirm the booking.
 
 This means that there was quite specifically an error with a request to the Graph API.
 
-1. The most common cause will be an error with account linking, so the first thing to do is check that the accounts are still linked. Log into https://alexa.amazon.co.uk as the corporate account Alexa uses, then go to the skills section. Check if the 'Room Finder' skill is linked.
+1. The most common cause will be an error with account linking, so the first thing to do is check that the accounts are still linked. Log into https://alexa.amazon.co.uk as the account Alexa uses, then go to the skills section. Check if the 'Room Finder' skill is linked.
 	- If it isn't linked, link it to alexa@turing.ac.uk
 	- If it is linked, try 'Disabling' it and relinking it.
 	- If you get a failure on linking, refer to the 'Problems with Account Linking' section.  
@@ -48,7 +48,7 @@ This means that there was quite specifically an error with a request to the Grap
 
 2. Once you've done this, go to the Home section of https://alexa.amazon.co.uk, and read the error message, which should be printed on a card there. This should give you an idea of what's going wrong. If it's something like an invalid or expired token, try relinking, then have a quick look at 'Problems with Account Linking'. It's not guaranteed to a a problem with account linking though, it could be an issue with how the lambda is parsing the token. So take a look at the lambda too - the 'Debugging Code' section may help a bit.
 
-3. If you want to know exactly where the error occurred, go to the [AWS console](https://eu-west-1.console.aws.amazon.com/console/home?region=eu-west-1#), log in as the corporate Amazon account, then go to CloudWatch, then Logs. Open the logs for aws/lambda/RoomFinder. Review the most recent logs to find the error reporting. You can find the specific RequestID that failed back at https://alexa.amazon.co.uk, in the Home section. Google the error, and see if there's an easy fix. If not, move onto the next step.
+3. If you want to know exactly where the error occurred, go to the [AWS console](https://eu-west-1.console.aws.amazon.com/console/home?region=eu-west-1#), log in as the Amazon account, then go to CloudWatch, then Logs. Open the logs for aws/lambda/RoomFinder. Review the most recent logs to find the error reporting. You can find the specific RequestID that failed back at https://alexa.amazon.co.uk, in the Home section. Google the error, and see if there's an easy fix. If not, move onto the next step.
 
 4. Now it's probably worth checking if the API requests/endpoints themselves are working. As usual, I'd suggest using [Postman](getpostman.com) to test each one. See 'Postman Help' for how to get Postman a token.
 
