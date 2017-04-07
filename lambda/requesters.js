@@ -5,66 +5,65 @@
 
 'use strict';
 
-var request = require('request');
-var Q = require('q');
+const request = require('request');
+const Q = require('q');
 
-var requesters = {} //Requesters object to export - 'require'd by index.js
+const requesters = {}; // Requesters object to export - 'require'd by index.js
 
 /**
- * requesters.postRoom - given a token and the owner of the room calendar, this books a new event on my calendar, inviting the room.
+ * requesters.postRoom - Book a new event on a calendar using parameters as time.
  *
- * @param  {string} token       The JWT access token provided by the Alexa Skill.
- * @param  {string} ownerAddress       Address of owner of calendar to be booked.
- * @param  {string} ownerName   Name of owner of calendar to be booked.
- * @param  {string} startTime   Start time of meeting to post, formatted as ISO-8601 string.
- * @param  {string} endTime     End time of meeting to post, formatted as ISO-8601 string.
- * @return {promise}            Promise resolved to the owner of calendar used. //TODO: This value is not actually used by index.js, but can be very useful for debug. Change before release.
+ * @param  {string} token          The JWT access token provided by the Alexa Skill.
+ * @param  {string} ownerAddress   Address of owner of calendar to be booked.
+ * @param  {string} ownerName      Name of owner of calendar to be booked.
+ * @param  {string} startTime      Start time of meeting to post, formatted as ISO-8601 string.
+ * @param  {string} endTime        End time of meeting to post, formatted as ISO-8601 string.
+ * @return {promise}               Promise resolved to nothing.
  */
-requesters.postRoom = function(token, ownerAddress, ownerName, startTime, endTime) {
+requesters.postRoom = function postRoom(token, ownerAddress, ownerName, startTime, endTime) {
+  const deferred = Q.defer();
 
-  var deferred = Q.defer();
-
-  //Event to be made as JSON
-  var newEvent = {
+  // Event to be made as JSON
+  const newEvent = {
     Subject: 'Alexa\'s Meeting',
     Start: {
       DateTime: startTime,
-      TimeZone: 'GMT'
+      TimeZone: 'UTC',
     },
     End: {
       DateTime: endTime,
-      TimeZone: 'GMT'
+      TimeZone: 'UTC',
     },
     Body: {
       Content: 'This meeting was booked by Alexa.',
-      ContentType: 'Text'
+      ContentType: 'Text',
     },
-    Attendees : [ {
+    Attendees: [{
       Status: {
         Response: 'NotResponded',
-        Time: startTime
+        Time: startTime,
       },
       Type: 'Required',
       EmailAddress: {
         Address: ownerAddress,
-        Name: ownerName
-      }
-    } ]
-  }
+        Name: ownerName,
+      },
+    }],
+  };
 
-  var toPost = {
+  const toPost = {
     url: 'https://graph.microsoft.com/v1.0/me/events',
     headers: {
       'content-type': 'application/json',
-      authorization: 'Bearer ' + token,
+      authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify(newEvent)
-  }
+    body: JSON.stringify(newEvent),
+  };
 
-  //Posts event
-  request.post(toPost, function (err, response, body) {
-
-    var parsedBody = JSON.parse(body); //TODO: Parsed body errors due to incorrect tokens are not handled properly by this code. Place after if(err) to fix.
+  // Posts event
+  request.post(toPost, (err, response, body) => {
+    // TODO: Parsed body errors due to bad tokens aren't handled properly. Fix needed.
+    const parsedBody = JSON.parse(body);
 
     if (err) {
       deferred.reject(err);
@@ -75,107 +74,104 @@ requesters.postRoom = function(token, ownerAddress, ownerName, startTime, endTim
     }
   });
   return deferred.promise;
-}
+};
 
 
 /**
- * requesters.getCalendars - retrieves all of user's calendars from Office 365
+ * requesters.getCalendars - Retrieve all of user's calendars from API
  *
  * @param  {string} token The JWT access token provided by the Alexa Skill
  * @return {promise}      Promise resolved to JSON containing all calendars.
  */
-requesters.getCalendars = function(token) {
+requesters.getCalendars = function getCalendars(token) {
+  const deferred = Q.defer();
 
-  var deferred = Q.defer();
-
-  var toGet = {
-    url: 'https://graph.microsoft.com/beta/Users/Me/Calendars', //In order to obtain owner, which I'd like to use, the beta endpoint must be used. //TODO: When updated, change this endpoint.
+  const toGet = {
+    /* In order to obtain owner, which I require for consistency, the beta endpoint must be used.
+     * TODO: When stable versions are updated, change this endpoint. */
+    url: 'https://graph.microsoft.com/beta/Users/Me/Calendars',
     headers: {
-      authorization: 'Bearer ' + token,
+      authorization: `Bearer ${token}`,
     },
-  }
+  };
 
-  request.get(toGet, function (err, response, body) {
-    var parsedBody = JSON.parse(body);
+  request.get(toGet, (err, response, body) => {
+    const parsedBody = JSON.parse(body);
 
     if (err) {
       deferred.reject(err);
     } else if (parsedBody.error) {
-      deferred.reject(parsedBody.error.message)
+      deferred.reject(parsedBody.error.message);
     } else {
       deferred.resolve(parsedBody.value);
     }
   });
   return deferred.promise;
-}
-
-
+};
 
 /**
- * requesters.findFreeRoom - finds a free room when given a set of calendars to use, a start time and an end time.
+ * requesters.findFreeRoom - Find a free calendar, given particular calendars to check.
  *
  * @param  {string} token       The JWT access token provided by the Alexa Skill
- * @param  {string} startTime   The start time of the period to check, formatted as an ISO 8601 string.
- * @param  {string} endTime     The end time of the period to check, formatted as an ISO 8601 string.
- * @param  {array} namesToFind  Array containing the names of all calendars to search for
- * @param  {object} parsedCals  JSON containing all calendars returned by requesters.
- * @return {promise}            Promise resolved to JSON object containing owner of calendar and name of calendar.
+ * @param  {string} startTime   The start time of the period to check, formatted as ISO-8601 string
+ * @param  {string} endTime     The end time of the period to check, formatted as ISO-8601 string
+ * @param  {string[]} names     Array containing the names of all calendars to search for
+ * @param  {Object} parsedCals  JSON containing all calendars returned by requesters
+ * @return {promise}            Promise resolved to JSON object: ownerName, ownerAdress, name
  */
-requesters.findFreeRoom = function(token, startTime, endTime, namesToFind, parsedCals) {
-
-  var deferred = Q.defer();
+requesters.findFreeRoom = function findFreeRoom(token, startTime, endTime, names, parsedCals) {
+  const deferred = Q.defer();
 
   /* For each calendar:
-   * - check if its name is in namesToFind.
-   * - if it is in namesToFind, check if it's free.
+   * - check if its name is in 'names'.
+   * - if it is in 'names', check if it's free.
    * - if it is free, return its owner and name in a JSON.
    *
    * This is done asynchronously to speed up the process. This means a
    * system must be built to register if no calendars were free.
    * TODO: Improve the code that registers that no rooms are free, as it's hacky.*/
 
-  var calendarsTotal = parsedCals.length;
-  var calendarsUnavailable = 0;
+  const calendarsTotal = parsedCals.length;
+  let calendarsUnavailable = 0;
 
-  parsedCals.forEach(function(calendar) {
-    if(~namesToFind.indexOf(calendar.name)) {
+  parsedCals.forEach((calendar) => {
+    if (names.indexOf(calendar.name) >= 0) {
+      const calViewUrl = `https://graph.microsoft.com/v1.0/Users/Me/Calendars/${calendar.id.toString()}/calendarView?startDateTime=${startTime}&endDateTime=${endTime}`;
 
-      var calViewUrl = 'https://graph.microsoft.com/v1.0/Users/Me/Calendars/' + calendar.id.toString() + '/calendarView?startDateTime=' + startTime + '&endDateTime=' + endTime;
-
-      var toGet = {
+      const toGet = {
         url: calViewUrl,
         headers: {
-          authorization: 'Bearer ' + token,
+          authorization: `Bearer ${token}`,
         },
-      }
+      };
 
-      request.get(toGet, function (err, response, body) {
-        var parsedBody = JSON.parse(body);
+      request.get(toGet, (err, response, body) => {
+        const parsedBody = JSON.parse(body);
         if (err) {
-          deferred.reject(err)
+          deferred.reject(err);
         } else if (parsedBody.error) {
-          deferred.reject(parsedBody.error.message)
-        } else if (parsedBody.value == '') {
+          deferred.reject(parsedBody.error.message);
+        } else if (parsedBody.value && parsedBody.value.length === 0) {
           deferred.resolve({
-            "ownerName" : calendar.owner.name,
-            "ownerAddress" : calendar.owner.address,
-            "name" : calendar.name
+            ownerName: calendar.owner.name,
+            ownerAddress: calendar.owner.address,
+            name: calendar.name,
           });
         } else {
           calendarsUnavailable += 1;
-          if(calendarsUnavailable == calendarsTotal) {
+          if (calendarsUnavailable === calendarsTotal) {
             deferred.resolve(false);
           }
         }
       });
     } else {
       calendarsUnavailable += 1;
-      if(calendarsUnavailable == calendarsTotal) {
+      if (calendarsUnavailable === calendarsTotal) {
         deferred.resolve(false);
       }
     }
   });
   return deferred.promise;
-}
+};
 
-module.exports = requesters; //Export requesters.
+module.exports = requesters; // Export requesters.
