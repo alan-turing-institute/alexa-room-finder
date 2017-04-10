@@ -6,7 +6,9 @@ module.exports = {
     "application": {
       "applicationId": config.appId, // App ID
     },
-    "attributes": {},
+    "attributes": {
+      "STATE": "",
+    },
     "user": {
       "userId": "",
       "accessToken": config.token, // Microsoft Authentication Token

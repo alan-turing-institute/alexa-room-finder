@@ -25,14 +25,14 @@ const states = {
  * NB: Must be bound to the correct this.
  */
 function resetAttributes() {
-  this.attributes.ownerAddress = undefined;
-  this.attributes.ownerName = undefined;
-  this.attributes.roomName = undefined;
-  this.attributes.startTime = undefined;
-  this.attributes.endTime = undefined;
-  this.attributes.duration = undefined;
-  this.attributes.speechOutput = undefined;
-  this.attributes.repromptSpeech = undefined;
+  delete this.attributes.ownerAddress;
+  delete this.attributes.ownerName;
+  delete this.attributes.roomName;
+  delete this.attributes.startTime;
+  delete this.attributes.endTime;
+  delete this.attributes.duration;
+  delete this.attributes.speechOutput;
+  delete this.attributes.repromptSpeech;
 }
 
 /**

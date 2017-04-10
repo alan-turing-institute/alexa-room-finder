@@ -23,7 +23,7 @@ module.exports = {
     "locale": "en-GB", // Locale
     "timestamp": "",
     "intent": {
-      "name": "AMAZON.StartOverIntent", // Name of Intent
+      "name": "AMAZON.StopIntent", // Name of Intent
       "slots": {},
     },
   },

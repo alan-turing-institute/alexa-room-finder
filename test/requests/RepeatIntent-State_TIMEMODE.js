@@ -23,7 +23,7 @@ module.exports = {
     "locale": "en-GB", // Locale
     "timestamp": "",
     "intent": {
-      "name": "Amazon.RepeatIntent", // Name of Intent
+      "name": "AMAZON.RepeatIntent", // Name of Intent
       "slots": {},
     },
   },

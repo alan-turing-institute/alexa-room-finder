@@ -248,7 +248,7 @@ The body of the response will look exactly the same as before:
 }
 ```
 
-### Using the 1.0 endpoint
+## Using the 1.0 endpoint
 
 To use the 1.0 endpoint, instead of registering your application in the Microsoft Developer Application Registration Portal, use the [Azure Portal](https://portal.azure.com).
 
