@@ -215,13 +215,21 @@ Then, provided you install lambda-local globally (`(sudo) npm install -g lambda-
 
 I've combined [mocha](https://mochajs.org/) and [lambda-local](https://www.npmjs.com/package/lambda-local) to create a practical testing package. Currently it only tests that a response is sent, not that the response is right, but it does log the responses so you can read them. In order to use it, first make sure you have the dev-dependencies of the overall repo installed - particularly `mocha` and `lambda-local`. Then just run `npm test` or `./node_modules/mocha/bin/mocha` from the root. You can just use `mocha` if you have mocha installed globally.
 
-**NB: At present, if there's an error with getting or posting to the Graph API, mocha still reports the 'build passing'. This is because I want these specific errors to be handled neatly by my Alexa Skill now we're in production; as it therefore emits to the skill successfully, no error is reported to Mocha. If you have an issue with booking, read the responses logged by Mocha and look for responses containing error cards.**
+By default, Mocha checks that the **exact** right response is returned. However, I've had some trouble integrating it with lambda-local, so it may not always report the error correctly; specifically in cases where Graph API requests are made, it returns timeouts, rather than detailing the wrong response.
+
+If you want to use my other mocha tests, you can change how testing is done by editing which tests are skipped. I only recommend using one of these files at a time.
+
+- `response-test.js` will test that every request returns the *correct* response.
+
+- `simple-test.js` will test just that every request returns *some* response.
+
+- `requesters-test.js` will test that the requesters work.
 
 If you don't want to use mocha, I've also included a shell script, so if you do install lambda-local globally, you can just run that using `bash run_tests.sh`; this will also run every possible intent and log responses.
 
 ## Testing just the requesters
 
-One can simply test the requesters using lambda-local, but sometimes that will return timeouts instead of actual errors. Therefore, I made files in `test/requesters/` so you can quickly test the requesters. Simply run each file in node to see if the requesters are working.
+One can simply test the requesters using lambda-local, but sometimes that will return timeouts instead of actual errors. Mocha will work, but I also made files in `test/requesters/` so you can quickly test one requesters. Simply run each file in node to see if the requesters are working.
 
 ## Testing the skill online
 
