@@ -1,4 +1,4 @@
-# How to: Azure Active Directory Authentication [Draft 1.1, WIP]
+# How to: Azure Active Directory Authentication [Draft 1.2]
 
 Active Directory Authentication gives an application access to the Microsoft Graph API, effectively giving them access to the whole Office 365 tenant, and the Azure Active Directory tenant. This makes it fairly powerful for making simple log-in to an application, securing Web APIs, and for automating certain Office tasks. This quick how-to will explain basic set-up. I assume some familiarity with basic http and OAuth2.
 
@@ -151,7 +151,7 @@ If you want to use the AD as user authentication for your own (for example, web)
 
 If you want to see Azure's OpenID metadata, you can find it here:  "https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration"
 
-### I need user identification for my app *and* acess to the Graph API: Using the 2.0 endpoint, OpenID Connect, and OAuth2 Authorisation Code Grant
+### I need user identification for my app *and* access to the Graph API: Using the 2.0 endpoint, OpenID Connect, and OAuth2 Authorisation Code Grant
 
 If you want all of the above, follow this section. We'll get both an [ID token](https://docs.microsoft.com/en-us/azure/active-directory/develop/active-directory-v2-tokens) and an access token to use for API requests.
 
@@ -250,4 +250,48 @@ The body of the response will look exactly the same as before:
 
 ### Using the 1.0 endpoint
 
-In the works.
+To use the 1.0 endpoint, instead of registering your application in the Microsoft Developer Application Registration Portal, use the [Azure Portal](https://portal.azure.com).
+
+- Click Active Directory, on the left.
+
+  ![Active Directory](https://cloud.githubusercontent.com/assets/20475469/24853468/195dc062-1dd3-11e7-960d-1a6aa6c45e66.png)
+
+- Click App Registrations
+
+  ![App Registrations](https://cloud.githubusercontent.com/assets/20475469/24852889/06c20104-1dd1-11e7-9096-0588d54938cf.png)
+
+- Click 'Add', and give the application a name and a sign-on URL (this is one of the URLs it will send your token back to.)
+
+- Open your new App Registration, and note down the 'Application ID' - this is the Client ID for any requests you make to the application.
+
+  ![App Registration](https://cloud.githubusercontent.com/assets/20475469/24852909/17f4d654-1dd1-11e7-944d-8a1e685f3843.png)
+
+- Now click 'Reply URLs' and add URLs for very place you may want to send a token to. Note that localhost is allowed.
+
+  ![Reply URLS](https://cloud.githubusercontent.com/assets/20475469/24852921/21c2e888-1dd1-11e7-9617-ad0536b51040.png)
+
+- Now click 'Required Permissions' and add any permissions you may need to it.
+
+    - Delegated permissions are permissions you wish the application to have when logged-in as a user. These could include seeing their profile, or sending mail from their account. If in doubt, I'd recommend using Delegated Permissions for pretty much everything.
+
+    - Application permissions are any permissions you wish the application to have for itself - it can do these things without being logged-in as a user.
+
+    ![Permissions](https://cloud.githubusercontent.com/assets/20475469/24852925/26e8b05e-1dd1-11e7-99f0-d13692246298.png)
+
+- When you're done, click 'Grant Permissions'.
+
+- Now go to Keys, and generate a Key. This is the 'Client Secret' you use for any requests; store it safely, as before.
+
+  ![Keys](https://cloud.githubusercontent.com/assets/20475469/24853092/c4b5d686-1dd1-11e7-937b-5b2cd1eba16e.png)
+
+You're now ready to make any requests you need!
+
+### Making requests to the 1.0 endpoint
+
+Making requests to this endpoint is almost exactly the same as with the 2.0 endpoint. All you need to do is follow the instructions above for the 2.0 endpoint, but **replace your endpoint URLs**.
+
+You can find the endpoints you need to use by clicking 'Endpoints' on the app registration page.
+
+![Endpoints](https://cloud.githubusercontent.com/assets/20475469/24853484/24b3c1f0-1dd3-11e7-9c08-0a32b366b36f.png)
+
+The URLs are then written in the blade on the right. If you're following my instructions, use the bottom two endpoints.
