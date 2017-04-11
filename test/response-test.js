@@ -2,7 +2,7 @@ const lambdaLocal = require('lambda-local');
 const expect = require('chai').expect;
 
 describe('Blank State:', function () {
-  this.timeout(5000);
+  this.timeout(3500);
 
   describe("LaunchRequest", function () {
     it("should return welcome response", function (done) {
@@ -226,7 +226,7 @@ describe('Blank State:', function () {
 });
 
 describe('TIMEMODE State:', function () {
-  this.timeout(5000);
+  this.timeout(3500);
 
   describe('BookIntent', function () {
     it('should return correct response', function (done) {
@@ -428,7 +428,7 @@ describe('TIMEMODE State:', function () {
 });
 
 describe('CONFIRMMODE State:', function () {
-  this.timeout(5000);
+  this.timeout(3500);
 
   describe('BookIntent', function () {
     it('should book room', function (done) {

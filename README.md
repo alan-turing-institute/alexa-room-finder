@@ -187,15 +187,11 @@ Before you test properly on the Echo, you'll need to actually perform the link b
 
 # Testing
 
-## Testing with lambda-local
-
-[lambda-local](https://www.npmjs.com/package/lambda-local) is extremely useful for testing the main Lambda function locally.
-
 In order to test locally, you'll first need a token to pass to the Lambda function. During development, I am using [Postman](https://www.getpostman.com/) to acquire tokens, and copying them in manually.
 
 When you have a token, edit file: `test/test-config.js`, most importantly replacing `{token}` with your actual token, and `{app-id}` with the same App ID being used in `index.js`. You'll also want to change the various other variables. For example:
 
-```
+```javascript
 module.exports = {
   appId: "amzn1.ask.skill.00000000-0000-0000-0000-000000000000",
   token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJEb24ndCBkZWNvZGUgZXhhbXBsZSB0b2tlbnMuIiwiZXhwIjoxLCJuYW1lIjoia25vd2xzaWUiLCJhZG1pbiI6ZmFsc2V9.QhndPM-IJk1XcgntgXqXlI-9mmEesoRLKE1uLhrK5tg",
@@ -209,13 +205,15 @@ module.exports = {
 }
 ```
 
-Then, provided you install lambda-local globally (`(sudo) npm install -g lambda-local`), you can test intents from the console using this command: `lambda-local -l lambda/index.js -h handler -e test/requests/filename.js` where filename is the JSON request you want to test. I've created test JSONs for all of the available intents. The most important intent to test is the BookIntent from CONFIRMMODE, and the DurationIntent from TIMEMODE - they make requests to the Graph API.
+## Testing with lambda-local
+
+[lambda-local](https://www.npmjs.com/package/lambda-local) is extremely useful for testing the main Lambda function locally.
+
+Provided you install lambda-local globally (`(sudo) npm install -g lambda-local`), you can test intents from the console using this command: `lambda-local -l lambda/index.js -h handler -e test/requests/filename.js` where filename is the JSON request you want to test. I've created test JSONs for all of the available intents. The most important intent to test is the BookIntent from CONFIRMMODE, and the DurationIntent from TIMEMODE - they make requests to the Graph API.
 
 ## Testing with Mocha
 
-I've combined [mocha](https://mochajs.org/) and [lambda-local](https://www.npmjs.com/package/lambda-local) to create a practical testing package. Currently it only tests that a response is sent, not that the response is right, but it does log the responses so you can read them. In order to use it, first make sure you have the dev-dependencies of the overall repo installed - particularly `mocha` and `lambda-local`. Then just run `npm test` or `./node_modules/mocha/bin/mocha` from the root. You can just use `mocha` if you have mocha installed globally.
-
-By default, Mocha checks that the **exact** right response is returned. However, I've had some trouble integrating it with lambda-local, so it may not always report the error correctly; specifically in cases where Graph API requests are made, it returns timeouts, rather than detailing the wrong response.
+I've combined [mocha](https://mochajs.org/) and [lambda-local](https://www.npmjs.com/package/lambda-local) to create a practical testing package. In order to use it, first make sure you have the dev-dependencies of the overall repo installed - particularly `mocha` and `lambda-local`. Then just run `npm test` or `./node_modules/mocha/bin/mocha` from the root. You can just use `mocha` if you have mocha installed globally. By default, Mocha checks that the **exact** right response is returned. However, I've had some trouble integrating it with lambda-local, so it may not always report the error correctly; specifically in cases where Graph API requests are made, it returns timeouts, rather than detailing the wrong response.
 
 If you want to use my other mocha tests, you can change how testing is done by editing which tests are skipped. I only recommend using one of these files at a time.
 
@@ -225,7 +223,7 @@ If you want to use my other mocha tests, you can change how testing is done by e
 
 - `requesters-test.js` will test that the requesters work.
 
-If you don't want to use mocha, I've also included a shell script, so if you do install lambda-local globally, you can just run that using `bash run_tests.sh`; this will also run every possible intent and log responses.
+If you don't want to use mocha, I've also included a shell script, so if you do install lambda-local globally, you can just run that using `bash run_tests.sh`; this will just run every possible intent and log responses.
 
 ## Testing just the requesters
 

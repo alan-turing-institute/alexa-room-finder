@@ -289,8 +289,8 @@ const nonIntentHandlers = {
 
 
 // Main
-exports.handler = (event, context) => {
-  const alexa = Alexa.handler(event, context); // See alexa.js in alexa-sdk package for definition.
+exports.handler = (event, context, callback) => {
+  const alexa = Alexa.handler(event, context, callback); // See alexa.js in alexa-sdk package.
   alexa.appId = config.appId; // App ID of Alexa skill, found on skill's page.
   alexa.resources = resources.languageStrings; // All strings to be used by program.
   alexa.registerHandlers(
