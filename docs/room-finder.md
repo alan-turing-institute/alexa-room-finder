@@ -32,7 +32,7 @@ No. I use a bunch of listeners that aren't intents in Room Finder, just to neate
 
 ***None of the above.*** It refers to a 'handlerContext' object, which is defined in the SDK backend. If you want the real details of what you can access through this variable, I'd suggest reading the backend documentation I've written up. Here's the basics - when reading this, assume `this` refers to the overall `handler` object whenever used.
 
-```
+```javascript
 on: this.on.bind(this),
 emit: this.emit.bind(this),
 emitWithState: EmitWithState.bind(this),
@@ -45,7 +45,7 @@ event: this._event,
 attributes: this._event.session.attributes,
 context: this._context,
 name: eventName,
-isOverridden: IsOverridden.bind(this, eventName), //  Function that tells you whether there is more than one. listener for a particular event string.
+isOverridden: IsOverridden.bind(this, eventName), //  Function that tells you whether there is more than one listener for a particular event string.
 response: ResponseBuilder(this) // Function that returns a function to generate responses.
 ```
 
@@ -53,7 +53,7 @@ response: ResponseBuilder(this) // Function that returns a function to generate 
 
 At time of writing, there's a bug in the SDK that prevents this. I've submitted a pull request, so I'm hoping they fix it some way or another. In order to workaround this, instead of just putting `this.handler.state =""`, put both these lines:
 
-```
+```javascript
 this.handler.state = "";
 this.handler.response.sessionAttributes.STATE = "";
 ```

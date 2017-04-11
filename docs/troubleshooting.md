@@ -58,7 +58,7 @@ This means that there was quite specifically an error with a request to the Grap
     - GET to `https://graph.microsoft.com/v1.0/Users/Me/Calendars/{CALENDAR-ID-GOES-HERE}/calendarView?startDateTime={ISO-START-TIME-GOES-HERE}&endDateTime={ISO-END-TIME-GOES-HERE}`. If the room is free, the value field of the response should be an empty array.
     - POST to `https://graph.microsoft.com/v1.0/me/events`, with an valid JSON [event](https://developer.microsoft.com/en-us/graph/docs/api-reference/v1.0/resources/event) in the body. You can find the one Alexa uses in `lambda/requesters.js`. You need to change the start and end time, add attendee details if wanted, and then stringify the object with `JSON.stringify()`.
 
-	    ```
+	    ```javascript
 	    {
 		    Subject: 'Alexa\'s Meeting',
 		    Start: {
@@ -146,7 +146,7 @@ The way Alexa book rooms is she creates events on her calendar, and then invites
 	You can find the ID of a room by making a request to `https://graph.microsoft.com/beta/Users/me/calendars/` and picking the ID any free calendar from the list.
 
 	If the room is free for the specified time, the response should look something like this:
-	```
+	```json
 	{
 	  "@odata.context": "...",
 	  "value": []

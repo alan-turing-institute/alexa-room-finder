@@ -1,12 +1,10 @@
 # Alexa Skills Kit SDK for Node.js - Under the Hood [Draft 2.0]
 
-This is intended to explain how the [Alexa Skills Kit SDK for Node.js](https://github.com/alexa/alexa-skills-kit-sdk-for-nodejs) actually works. I'm hoping this will assist with the maintenance of my skill. There are several issues with their code that merit explanation, so I've tried to go into code-level detail; hopefully this isn't too much.
+This is intended to explain how the [Alexa Skills Kit SDK for Node.js](https://github.com/alexa/alexa-skills-kit-sdk-for-nodejs) actually works. I'm hoping this will assist with the maintenance of my skill. There are a few issues with their code that merit explanation, so I've tried to go into code-level detail; hopefully this isn't too much.
 
-To summarise my (obviously subjective) opinion: the Alexa SDK is fairly poorly written, and very poorly documented. It's certainly very easy to start using it, but it's unclear precisely how anything works unless you read the (uncommented) Javascript.
+As a framework for explaining the SDK, let's look top-down at how the SDK is actually used from your main `index.js` file. None of the back-end of these things is explained by the Amazon documentation, so that's the point of this exercise.
 
-As a framework for explaining the SDK, let's look top-down at how the SDK is actually used from your main `index.js` file. None of the back-end of these things is really explained by the Amazon documentation, but here's what they tell you to write.
-
-```
+```javascript
 exports.handler = (event, context) => {
   const alexa = Alexa.handler(event, context);
   alexa.appId = appId;
@@ -22,9 +20,9 @@ Note that `exports.handler = (event, context) => {}` is just for AWS lambda supp
 
 ## Line 1: Creating the handler object
 
-The vast bulk of the code is actually run all by the first line: `const alexa = Alexa.handler(event, context);`. `Alexa.handler` is a function (defined in `alexa.js`) that, using an event and context as parameters, returns an object of type `AlexaRequestEmitter`. This object extends the [EventEmitter class from the Node events module](https://nodejs.org/api/events.html). EventEmitters are very simple, and totally standard in Node. Here's (at a very basic level) how you use one:
+The vast bulk of the code is actually run all by the first line: `const alexa = Alexa.handler(event, context);`. `Alexa.handler` is a function (defined in `alexa.js`) that, using an event and context as parameters, returns an object of type `AlexaRequestEmitter`. This object extends the [EventEmitter class from the Node events module](https://nodejs.org/api/events.html). If you don't know already EventEmitters are very simple, and totally standard in Node. Here's (at a very basic level) how you use one:
 
-```
+```javascript
 myEmitter.on('event', () => {
   console.log('An event occurred!');
 });
@@ -33,14 +31,14 @@ myEmitter.emit('event');
 
 `.on()` sets up a listener, which will just perform its particular function when the right 'eventName' is passed to the emitter via `.emit()`.
 
-This means we're going to set up a big EventEmitter can detect any of our 'Intents', then do a function. Simple.
+We're going to set up a big EventEmitter can detect any of our 'Intents', then do a function. Simple.
 
 **NB:
 - In line 4, you can register several different intent handler objects, but they will all be registered in this same EventEmitter, in pretty much the same way. They are in no way separate, so events can be emitted from one 'handler' or 'state handler' to another.
-- The default max number of listeners per EventEmitter is 10. The SDK overrides this to 'Infinity'. This is technically bad practice, but there's no other way to easily make an emitter of arbitrary size.
-- You may read in the EventEmitter documentation that by default, `this` in a listener-attached function refers to the EventEmitter object. The SDK chooses to override this (without appropriately documenting the API), so that is not the case here. We'll get back to this later.**
+- The default max number of listeners per EventEmitter is 10. The SDK overrides this to 'Infinity'. This isn't great, but there's no other way to easily make an emitter of arbitrary size.
+- You may read in the EventEmitter documentation that by default, `this` in a listener-attached function refers to the EventEmitter object. The SDK chooses to override this, so that is not the case here. We'll get back to this later.**
 
-After the AlexaRequestEmitter (which confusingly is named `handler`) is declared, the function gives it a bunch of extra properties, which for the most part will be actually set later. The simple ones are:
+After the AlexaRequestEmitter (which is named `handler`) is declared, the function gives it a bunch of extra properties, which for the most part will be actually set later. The simple ones are:
 
 - \_event: event (from lambda parameters)
 - \_context: context (from lambda parameters)
@@ -70,7 +68,7 @@ This function takes as arguments any number of objects - these are the handlers 
 
 - Secondly, **it binds each function to a new variable named handlerContext.** This means that when you use `this` in your listener callback, it refers to 'this' object right here:
 
-  ```
+  ```javascript
   var handlerContext =
   {
       on: this.on.bind(this),
@@ -114,14 +112,14 @@ This function takes as arguments any number of objects - these are the handlers 
     - **this.response would have one major use, which is audio player support.** If you wish to use the audio player, I would strongly suggest looking at [the AudioPlayer's specific documentation](https://developer.amazon.com/public/solutions/alexa/alexa-skills-kit/docs/custom-audioplayer-interface-reference), then reading the ResponseBuilder functions themselves, as they are fairly self-explanatory. You will however need to fix the ResponseBuilder function so this works.
 
     - **Here's how I'd fix it:** Very simply, add a new getter property to the object that `ResponseBuilder` returns:
-      ```
-      'getResponseObject': function () {
-        return responseObject;
+      ```javascript
+      'setResponse': function () {
+        this.handler.response = responseObject
       }
       ```
       Then you can do stuff like this:
-        ```
-        this.handler.response = this.response.speak('foo').listen('bar').getResponseObject();
+        ```javascript
+        this.response.speak('foo').listen('bar').setResponse();
         this.emit(':responseReady');
         ```
 
@@ -177,12 +175,12 @@ Let's take a look at those in more detail:
 
         Anyway, this can be easily bypassed without editing the SDK if one simply sets the session attribute directly. You must also change `this.handler.state` at the same time, or it will just reset to what it was before.
 
-        ```
+        ```javascript
         this.handler.state = "";
         this.handler.response.sessionAttributes.STATE = "";
         ```
 
-    2. This isn't a bug, but technically `this.context.succeed` should no longer be used, as it's been effectively deprecated. It would be much better to use `callback`. We submitted a pull request to fix this, but it's not been accepted quite yet.
+    2. This isn't a bug, but technically `this.context.succeed` should no longer be used, as it's in the process of being deprecated. It would be better to use `callback`. A pull request has been submitted to fix this, but it's not been accepted quite yet.
 
 Now that the SDK has registered it's default listeners, the first line is finally done.
 
@@ -198,7 +196,7 @@ Now that the SDK has registered it's default listeners, the first line is finall
 
 This registers your skill-specific listeners, in the `handler` object, following the method described above. A useful thing to note, is that not all of these listeners have to be events. If you're like me and you want to use them for abstraction, non-intent handlers can be useful. For example, I like register like a `':askHandler'` listener that automatically sets speech attributes (for repeating) and then emits ask:
 
-```
+```javascript
 ':askHandler': function(speechOutput, repromptSpeech) {
   this.attributes.speechOutput = speechOutput;
   this.attributes.repromptSpeech = repromptSpeech;
@@ -259,7 +257,7 @@ In this case, the `callback` is to very simply assign the attributes to the `thi
 Attributes are saved during `this.emit(':responseReady')`, or if you emit `this.emit(':saveState')` yourself. Even then, they are only saved in these scenarios:
 
 1. The session is about to end.
-2. In theory, if you've manually set the `handler.saveBeforeResponse` value to true. In practice... **There's another SDK bug here. They check this.saveBeforeResponse rather than this.handler.saveBeforeResponse. I've submitted a pull to fix this.**
+2. In theory, if you've manually set the `handler.saveBeforeResponse` value to true. In practice... **There's another SDK bug here. They check this.saveBeforeResponse rather than this.handler.saveBeforeResponse. They fixed this on Github, but not on the actual npm package.**
 3. You included a true `forceSave` parameter when emitting saveState. By default, `':responseReady'` doesn't do this when it emits saveState.
 
 
@@ -272,7 +270,7 @@ This uses the `aws-sdk` module to facilitate requests to DynamoDB.
 
 Skipping a bit of error handling, this fairly simply does a `put` query on the table, using these parameters.
 
-```
+```javascript
 {
     Item: {
         userId: userId,
