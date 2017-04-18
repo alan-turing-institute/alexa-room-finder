@@ -74,7 +74,7 @@ Sorry, you'll then have to repeat these steps for every other calendar you inten
 
 The skill handling is built to be hosted on Amazon Web Services' [Lambda](https://aws.amazon.com/lambda/).
 
-**This section shows how to upload the function by the web app, a GUI. If you want to do it from the command line, see "Automating Lambda Function creation and configuration."**
+**This section shows how to upload the function by the web app, a GUI. If you want to do it from the command line, see "Gulp for Creating the Lambda Function."**
 
 In order to make a function in Lambda:
 * Open the Lambda console. If you're in Europe make sure your region is set to EU Ireland (eu-west-1) as this is the only supported European region for Alexa Skills Kit.
@@ -95,55 +95,27 @@ In order to make a function in Lambda:
 
 * After you've created your Lambda function, look at the top right of the page to get your **Lambda ARN** and put that in the Alexa Skill Information Endpoint field.
 
-## Automating Lambda Function Creation and Configuration
+## Gulp for Creating the Lambda Function
 
-One of the goals of this project is to automate (or at least put in the command line) as much of the set-up as possible. While AWS CLI provides no support for Alexa Skills, you can use AWS CLI to create and update the Lambda function. The necessary bash commands to do this are found in the `automation` folder, and are detailed below. Once you've edited the shell files to have the correct configuration values, you can run any of the files from the `automation` folder, for the desired effect.
+One of the goals of this project is to put as much of the set-up as possible in the command-line. While it's impossible to do this for the Alexa skill itself, there are ways to upload the lambda function in AWS. For consistency I've used Gulp throughout for this, rather than (say) a makefile. Here's how set up works:
 
-Before you start this process, make sure to set the values in config.js. Change `const APP_ID = '{app-id}'` to the APP_ID found in the top left-hand corner of the Alexa console. Then change `const testNames = [...];` to an array of the names of rooms you'd like to find. These are just the names of the room calendars on your Office 365 instance, but **it's important that these names are exact as they're used to identify the right calendars.**
+1. Install [gulp](gulpjs.com) with `npm install -g gulp`
 
-**First you need to install and configure AWS CLI** (Commands below are listed in `automation/configure_aws_cli.sh`.)
+2. Install the dev-dependencies for the overall skill with `npm install`. *(Note that these are different to the dependencies required for just the lambda function.)*
 
-1. `brew install awscli` (`pip install awscli` will also work, but if you have brew, I suggest using that.)
-2. Run the below commands replacing the {} with access keys. You can get keys by following [these instructions.](http://docs.aws.amazon.com/lambda/latest/dg/setting-up.html)
-  ```
-  aws configure set aws_access_key_id {AWS KEY}
-  aws configure set aws_secret_access_key {AWS SECRET}
-  aws configure set default.region eu-west-1
-  ```
+3. In the `lambda` folder, also run `npm install` to install the necessary modules for just the lambda function.
 
-**Then you may have to create a 'lambda_basic_execution'-type role for the lambda function. You don't need to do this if you already have a lambda_basic_execution role.** (Commands below are listed in `automation/create_role.sh`)
+4. Set the values in `lambda/config.js`. Change `const APP_ID = '{app-id}'` to the APP_ID found in the top left-hand corner of the Alexa console. Then change `const testNames = [...];` to an array of the names of rooms you'd like to find. These are just the names of the room calendars on your Office 365 instance, but **it's important that these names are exact as they're used to identify the right calendars.**
 
-1. From the automation folder, run `aws iam create-role --role-name room_finder_basic_execution --assume-role-policy-document file://role-policy-document.json`. This creates a role named 'room_finder_basic_execution'.
-2. Run `aws iam put-role-policy --role-name room_finder_basic_execution --policy-name lambda_basic_execution --policy-document file://basic-execution-role.json`. This attaches a very basic policy to the role. This policy has very limited permissions, so you may want to add more if you want to complicate your skill.
-3. Run `aws iam get-role --role-name room_finder_basic_execution` to check the role created. From the object this returns, note down the "Arn" field as you'll need it in the next step.
+5. **Now you need to install AWS CLI.** This relies on you having either pip or homebrew. Just run `brew install awscli` or `pip install awscli`. It's up to you which.
 
-**Then you need to create the lambda function itself** (Commands below are listed in `automation/create_lambda.sh`.)
+6. **Then you need to configure AWS CLI.** You do this by running `gulp configure`, and then copying in the correct AWS IAM Key and ID when prompted. You can get these two values by looking [here](http://docs.aws.amazon.com/general/latest/gr/aws-sec-cred-types.html#iam-user-name-and-password), but I won't explain that in too much detail.
 
-1. From the `automation` folder, run `cd ../lambda`.
-2. Run `npm install` to install node_modules/, if you haven't already.
-3. Run `zip -r -X lambda.zip index.js requesters.js resources.js config.js node_modules/` to recursively compress the deployment package to `lambda.zip`.
-4. Run the below command to create the function, replacing {} with the ARN of the role. This can be found by running `aws iam get-role --role-name room_finder_basic_execution`, or in the Roles section of AWS IAM.
-  ```
-  aws lambda create-function \
-  --region eu-west-1 \
-  --function-name RoomFinder \
-  --zip-file fileb://lambda.zip \
-  --role {ARN OF ROOM_FINDER_BASIC_EXECUTION ROLE} \
-  --handler index.handler \
-  --runtime nodejs4.3 \
-  --profile default
-  ```
-5. Run the below command to add the Alexa Skills Kit trigger/permission to the new RoomFinder lambda function. You may want to replace "1234" with a unique identifier of your own.
-  ```
-  aws lambda add-permission \
-  --function-name RoomFinder \
-  --statement-id "1234" \
-  --action "lambda:InvokeFunction" \
-  --principal "alexa-appkit.amazon.com"  \
-  --region eu-west-1
-  ```
+7. **Then you may have to create a 'lambda_basic_execution'-type role for the lambda function.** Just run `gulp createRole`. *Note down the ARN of the created role as you'll need it in the next stage. I'm trying to remove this step, but it's proving tough.*
 
-**Then you'll want to test the function created properly** (Commands below are listed in `automation/test_lambda.sh`.)
+8. **Create the lambda function itself**. *Right now, you have to copy the ARN from the last step into `params` of the `gulpfile.js`, where it says `Role: '{ARN OF ROOM_FINDER_BASIC_EXECUTION ROLE}',`*. When you've done this, you can just run `gulp create`. This will create minify, lint, and zip it all for you.
+
+9. **Then you'll want to test the function created properly** (Commands below are listed in `automation/test_lambda.sh`.)
 
 1. Run `aws lambda list-functions --max-items 10 --profile default` to check that your lambda function is there. It should be called RoomFinder.
 2. Get more information on your lambda function by running the below code.
@@ -165,17 +137,9 @@ Before you start this process, make sure to set the values in config.js. Change 
   outputfile.txt
   ```
 
-**Lastly, you may want to update the lambda function after you've made any changes. I'd suggest using gulp to do this, but here are some shell scripts that will also work, if you don't want to use Gulp.** (Commands below are listed in `automation/update_lambda.sh`.)
+## Gulp for updating the Lambda function
 
-1. From the `automation` folder, `cd ../lambda`.
-2. Run `npm update` to make sure all modules are updated.
-3. Run `mv lambda.zip backup_lambda.zip` to backup the old lambda code, in case the updated code doesn't work. Don't run this file twice in a row with untested code, as you'll overwrite your older backup.
-4. Run `zip -r -X lambda.zip index.js requesters.js resources.js config.js node_modules/` to compress our updated files to a new deployment package.
-5. Run `aws lambda update-function-code --function-name 'RoomFinder' --zip-file 'fileb://lambda.zip'` to update the code.
-
-## Gulp
-
-I suggest updating the lambda function using gulp, which is easier and provides a neater build than the shell. It will also lint, then minify the code, and create build and package folders. To do this, first install [gulp](gulpjs.com), and the dev-dependencies for the overall skill. Note that these are different to the dependencies required for the lambda. Then just run `gulp` from the root directory, and it will fully update for you. Other gulp commands are `lint`, `clean`, `minify`, `move_modules`, `zip`, and `upload`.
+If you want to make changes, you can also use gulp. This will also lint and minify the code, and create build and package folders. To do this, first install [gulp](gulpjs.com), and the dev-dependencies for the overall skill. Note that these are different to the dependencies required for the lambda. Then just run `gulp` (or `gulp update`) from the root directory, and it will fully update for you.
 
 ## ESLint
 
