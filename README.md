@@ -113,33 +113,33 @@ One of the goals of this project is to put as much of the set-up as possible in 
 
 7. **Then you may have to create a 'lambda_basic_execution'-type role for the lambda function.** Just run `gulp createRole`. *Note down the ARN of the created role as you'll need it in the next stage. I'm trying to remove this step, but it's proving tough.*
 
-8. **Create the lambda function itself**. *Right now, you have to copy the ARN from the last step into `params` of the `gulpfile.js`, where it says `Role: '{ARN OF ROOM_FINDER_BASIC_EXECUTION ROLE}',`*. When you've done this, you can just run `gulp create`. This will create minify, lint, and zip it all for you.
+8. **Create the lambda function itself**. *Right now, you have to copy the ARN from the last step into `params` of the `gulpfile.js`, where it says `Role: '{ARN OF ROOM_FINDER_BASIC_EXECUTION ROLE}',`*. When you've done this, you can just run `gulp create`. This will create minify, lint, zip, and upload it all for you.
 
 9. **Then you'll want to test the function created properly** (Commands below are listed in `automation/test_lambda.sh`.)
 
-1. Run `aws lambda list-functions --max-items 10 --profile default` to check that your lambda function is there. It should be called RoomFinder.
-2. Get more information on your lambda function by running the below code.
-  ```
-  aws lambda get-function \
-  --function-name RoomFinder \
-  --region eu-west-1 \
-  --profile default
-  ```
-3. Test invocation of the function by running the below code, replacing {} with the file path of a JSON to test. You'll need to make your own JSON for now. (You can steal one out of the `test/requests` files used to test with lambda-local, though you will have to edit its values a bit. It's the thing after `module.exports = ...`)
-  ```
-  aws lambda invoke \
-  --invocation-type RequestResponse \
-  --function-name RoomFinder \
-  --region eu-west-1 \
-  --log-type Tail \
-  --payload file://{FILE PATH OF JSON TO TEST} \
-  --profile default \
-  outputfile.txt
-  ```
+    1. Run `aws lambda list-functions --max-items 10 --profile default` to check that your lambda function is there. It should be called RoomFinder.
+    2. Get more information on your lambda function by running the below code.
+        ```
+        aws lambda get-function \
+        --function-name RoomFinder \
+        --region eu-west-1 \
+        --profile default
+        ```
+    3. Test invocation of the function by running the below code, replacing {} with the file path of a JSON to test. You'll need to make your own JSON for now. (You can steal one out of the `test/requests` files used to test with lambda-local, though you will have to edit its values a bit. It's the thing after `module.exports = ...`)
+        ```
+        aws lambda invoke \
+        --invocation-type RequestResponse \
+        --function-name RoomFinder \
+        --region eu-west-1 \
+        --log-type Tail \
+        --payload file://{FILE PATH OF JSON TO TEST} \
+        --profile default \
+        outputfile.txt
+        ```
 
 ## Gulp for updating the Lambda function
 
-If you want to make changes, you can also use gulp. This will also lint and minify the code, and create build and package folders. To do this, first install [gulp](gulpjs.com), and the dev-dependencies for the overall skill. Note that these are different to the dependencies required for the lambda. Then just run `gulp` (or `gulp update`) from the root directory, and it will fully update for you.
+If you want to make changes or update the function as you go, you can also use gulp. This will also lint and minify the code, and create build and package folders. To do this, first install [gulp](gulpjs.com), and the dev-dependencies for the overall skill. Then, with your updates made, just run `gulp` (or `gulp update`) from the root directory, and it will fully update for you.
 
 ## ESLint
 
