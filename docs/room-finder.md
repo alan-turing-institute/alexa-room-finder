@@ -6,15 +6,17 @@ I'd like to think it's already a bit better commented and documented than the SD
 
 # The Alexa SDK API
 
-This brief section is intended to help you use the Alexa SDK Node Module without understanding exactly what's up under the hood. First, do check out Amazon's basic [SDK documentation](https://github.com/alexa/alexa-skills-kit-sdk-for-nodejs). You will also likely need the context of the overall [Alexa documentation.](https://developer.amazon.com/public/solutions/alexa/alexa-skills-kit/getting-started-guide). If you want to know how the SDK works on the backend check out my alexa-sdk documentation.
+This brief section is intended to help you use the [alexa-sdk](https://github.com/alexa/alexa-skills-kit-sdk-for-nodejs) Node Module without understanding exactly what's up under the hood. First, do check out Amazon's basic [alexa-sdk documentation](https://github.com/alexa/alexa-skills-kit-sdk-for-nodejs/README.md). You will also likely need the context of the overall [Alexa Skills Kit documentation](https://developer.amazon.com/public/solutions/alexa/alexa-skills-kit/getting-started-guide). If you want to know how the SDK works under the hood check out [docs/alexa-sdk](./alexa-sdk).
 
-To just summarize their documentation, the Alexa SDK works on an 'listener' system, where it sets up a handler (which is actually an extension of a Node [EventEmitter](https://nodejs.org/api/events.html)) that listens for particular events, then 'emits' other events in response. You set up the intents to listen for, then emit an event in response. They have a preregistered set of listeners (`':tell'`, `':ask'`, `':askWithCard'`, `':tellWithCard'`, `':tellWithLinkAccountCard'`, `':askWithLinkAccountCard'`, `':responseReady'`, `':saveState'`, and `':saveStateError'`) that you can emit to. These will push the parameters you give them to Alexa, and sort the rest of the response object for you. It will only work in AWS Lambda.
+To just summarize their documentation, the Alexa SDK works on an 'listener' system, where it sets up a handler - which is basically just a Node [EventEmitter](https://nodejs.org/api/events.html) - that listens for particular events, then 'emits' other events in response. You set up the intents to listen for, and what to send back. The EventEmitter also has a preregistered set of listeners (`':tell'`, `':ask'`, `':askWithCard'`, `':tellWithCard'`, `':tellWithLinkAccountCard'`, `':askWithLinkAccountCard'`, `':responseReady'`, `':saveState'`, and `':saveStateError'`), which will push the parameters you send them to Alexa, and sort the rest of the response object for you. This whole process will only work in AWS Lambda.
 
 Now some details that I think are poorly covered by documentation.
 
 #### Can I emit between different handlers and state handlers?
 
-Yes, you very much can. All the handlers are actually registered together in one big ['EventEmitter'](https://nodejs.org/api/events.html), known from here on out as `handler`; to allow this without overlapping intent names, intents with states are actually listening for `IntentName_STATEAPPENDED`. When Lambda gets an intent from the Echo, the SDK just appends the state on to the intent before emitting it to the handler. The issue this means that if you write `this.emit('BookIntent')` within any of the state handlers, it will always just call the 'BookIntent' of the 'stateless' handlers. Therefore if you want to call the 'BookIntent' in \_CONFIRMMODE, you have to use `this.emitWithState('BookIntent')` with the correct `this.handler.state`.
+Yes, you very much can. All the handlers are actually registered together in one big [EventEmitter](https://nodejs.org/api/events.html), known from here on out as `handler`; to allow this without overlapping intent names, intents with states are actually listening for `IntentName_STATEAPPENDED`.
+
+When Lambda gets an intent from the Echo, the SDK just appends the state on to the intent before emitting it to the handler. The issue this means that if you write `this.emit('BookIntent')` within any of the state handlers, it will always just call the 'BookIntent' of the 'stateless' handlers. Therefore if you want to call the 'BookIntent' in \_CONFIRMMODE, you have to use `this.emitWithState('BookIntent')` with the correct `this.handler.state` set.
 
 #### So how does emitWithState work?
 
@@ -62,7 +64,7 @@ You only need to do this for the empty string.
 
 #### Can I emit two events at the same time?
 
-Provided you don't need them to happen synchronously, and they don't both send something to Alexa - yes, but I don't recommend doing it. The issue is that the current SDK uses `context.succeed()` rather than `callback()` when it's done. `callback` waits for the event loop to be empty, whereas `context.succeed()` doesn't. Therefore you can't guarantee that simultaneous asynchronous events will finish, if `context.succeed()` is called to early.
+Provided you don't need them to happen synchronously, and they don't both send something to Alexa - yes. I still don't recommend doing it. The issue is that the current SDK uses `context.succeed()` rather than `callback()` when it's done. While `callback` waits for the Node event loop to be empty before it runs, `context.succeed()` doesn't. Therefore you currently can't guarantee that simultaneous asynchronous events will finish, if `context.succeed()` is called too early.
 
 # Room Finder
 
@@ -76,16 +78,16 @@ Simply put, first it asks the user if they want to book a room, then it asks the
 
 This requires two custom intents, one called BookIntent (which is both used to ask to book, and to confirm a booking), and one called DurationIntent. The handlers should also support all the specified built-in intents.
 
-All the states are set up and registered as handlers in `lambda/index.js`.
+All the states are set up and registered as handlers in [lambda/index.js](../lambda/index.js).
 
 ## Files
 
 For abstraction, my code is split into four files. If you want to maintain this structure, please follow these concepts:
 
-- `lambda/index.js` should contain all the main intent handlers, and is what is called by AWS Lambda.
-- `lambda/requesters.js` should contain all the functions that make requests to the MS Graph API.
-- `lambda/resources.js` should contain all strings used by index.js. (There are a couple of unviewed strings not stored here, in `lambda/requesters.js`.)
-- `lambda/config.js` should contain all the values that need to be set to reconfigure it to work for a different business. I'm pleased that this is now only the App ID, and the names of the Meeting Rooms.
+- [lambda/index.js](../lambda/index.js) should contain all the main intent handlers, and is what is called by AWS Lambda.
+- [lambda/requesters.js](../lambda/requesters.js) should contain all the functions that make requests to the MS Graph API.
+- [lambda/resources.js](../lambda/resources.js) should contain all strings used by index.js. (Though there are a couple of unviewed strings in [lambda/requesters.js](../lambda/requesters.js).)
+- [lambda/config.js](../lambda/config.js) should contain all the values that need to be set to reconfigure it to work for a different business. This is now only the App ID, and the names of the Meeting Rooms, though they may want to change some resources as well.
 
 ## Non-Intent Handlers
 
@@ -93,11 +95,11 @@ In order to make my code easier to read and debug, I made `nonIntentHandlers`, w
 
 - `:askHandler` - takes a `speechOutput` and a `repromptSpeech`. It stores these as session attributes, then calls `this.emit(':ask')` using the parameters above. This means that the last speech outputs are easily registered as session attributes, which allows Alexa to repeat itself. Can totally replace `this.emit(':ask')`.
 
-- `:repeatHandler` - takes no parameters. Very simply calls `this.emit(':ask')` using the session attributes for the last things said.
+- `:repeatHandler` - takes no parameters. Very simply calls `this.emit(':ask')` using the last things said, which are (hopefully) already stored as attributes.
 
 - `:startOverHandler` - takes no parameters. Sets the state to an empty string (using the workaround detailed above), resets all the attributes to undefined, then emits a `LaunchRequest`. Effectively resets the session.
 
-- `:errorHandler` - takes one 'error' parameter. Designed to report all request errors. Feel free to edit this one if you want to log errors in a different way. It both logs errors in the console, and puts them on a card to be seen in the Alexa app/web-app.
+- `:errorHandler` - takes one `error` parameter. Designed to report all request errors. Feel free to edit this one if you want to log errors in a different way. It both logs errors in the console, and puts them on a card to be seen in the Alexa app/web-app.
 
 *All the remaining nonIntentHandlers are called successively by DurationIntent in TimeMode. Each one handles a different stage of the room finding process.*
 
@@ -111,7 +113,7 @@ In order to make my code easier to read and debug, I made `nonIntentHandlers`, w
 
 ## Requesters
 
-The `lambda/requesters.js` file contains a set of functions that make requests to the Microsoft Graph API. The available functions are `getCalendars()`, `postRoom()`, and `findFreeRoom()`. All of these functions return [Q promises](https://github.com/kriskowal/q) - I still personally think Q is still better supported than ES6 promises, which is why I used it. This means the appropriate way to use them is `requesters.function(...).then((returned) => {...})`.
+The [lambda/requesters.js](../lambda/requesters.js) file contains a set of functions that make requests to the Microsoft Graph API. The available functions are `getCalendars()`, `postRoom()`, and `findFreeRoom()`. All of these functions return [Q promises](https://github.com/kriskowal/q) - I still personally think Q is still better supported than ES6 promises, which is why I used it. This means the appropriate way to use them is `requesters.function(...).then((returned) => {...})`.
 
 All these functions also use the [request](https://github.com/request/request) module to make their API request.
 
@@ -138,9 +140,9 @@ It does this by looping through the `parsedCals` object. For each calendar:
     ```
  - If all calendars either aren't in `names`, aren't `free`, or return errors, it returns a promise resolved to `false`.
 
- API requests are done asynchronously.
+ Each API requests in findFreeRoom is done asynchronously.
 
- Note on `findFreeRoom`'s' method: This function is fairly manual in how it works out which of the calendars are available - it uses a simple counter, and if they're all unavailable it resolves to false. One could use `Q.any()` for almost the same effect, but I did this, and unless you further complicate the code, it gives much worse error messages. It requires you to reject calendars that are busy, rather than just rejecting errors; thus my code allows differentiation between errors and unavailability which `Q.any()` doesn't. The other alternative is `Q.allSettled()` but that requires every API request to finish before the code returns, which worsens performance.
+ A note on `findFreeRoom`'s' method: this function uses a simple counter system to figure out whether a calendar is available. One could use `Q.any()` for almost the same effect, but I used to do this, and unless you further complicate the code, it makes it much harder to differentiate 'no rooms available' from 'an error occurred'. The other alternative is `Q.allSettled()` but that requires every API request to finish before the code returns, which worsens performance, and risks more timeouts. I think this method is the least of three evils.
 
 #### `postRoom(token, ownerAddress, ownerName, startTime, endTime)`
 
