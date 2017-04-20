@@ -1,8 +1,10 @@
 # Alexa Skills Kit SDK for Node.js - Under the Hood [Draft 2.0]
 
-This is intended to explain how the [Alexa Skills Kit SDK for Node.js](https://github.com/alexa/alexa-skills-kit-sdk-for-nodejs) actually works. I'm hoping this will assist with the maintenance of my skill. There are a few issues with their code that merit explanation, so I've tried to go into code-level detail; hopefully this isn't too much.
+This is documentation I wrote to explain to myself how the [Alexa Skills Kit SDK for Node.js](https://github.com/alexa/alexa-skills-kit-sdk-for-nodejs) actually works. You **definitely do not** need to read this to fix or update Room Finder, but I'm hoping this will help other people to develop Alexa skills, and possibly help maintain my skill. There are a few big issues with their code that merit explanation, so I was kinda forced to go into code-level detail. So, sorry if this is out of date by the time you read it.
 
-As a framework for explaining the SDK, let's look top-down at how the SDK is actually used from your main `index.js` file. None of the back-end of these things is explained by the Amazon documentation, so that's the point of this exercise.
+If you're reading this, you should first have read the [alexa-sdk docs](https://github.com/alexa/alexa-skills-kit-sdk-for-nodejs). I'd also go take a look at [alexa-cookbook](https://github.com/alexa/alexa-cookbook). which was released after I wrote this skill, and explains some useful tools.
+
+As a framework for explaining the SDK, let's look top-down at how the SDK is used from your main `index.js` file.
 
 ```javascript
 exports.handler = (event, context, callback) => {
@@ -14,13 +16,15 @@ exports.handler = (event, context, callback) => {
 };
 ```
 
-Note that `exports.handler = (event, context, callback) => {}` is just for AWS lambda support. By default Lambda (when using Node) will run the exported `index.handler` on execution, with `event, context, callback` as parameters. Including a callback is unnecessary right now, and unmentioned in the docs, but include it for future-proofing.  Overall, you can just imagine the contents of that arrow function as the 'main' code being run. To explain what these 5 simple lines actually do, let's go in line order.
+*Note: `exports.handler = (event, context, callback) => {}` is just for AWS lambda support. By default AWS Lambda (with Node) will call the exported `index.handler` function, with `event, context, callback` as parameters. The callback isn't being used right now (it's unmentioned in their docs) but you should include it for future-proofing. Overall, you can just imagine the contents of that arrow function as the 'main' code being run.*
+
+The SDK docs tell you to use these lines, but none of the back-end is explained by the Amazon documentation, so that's the point of this exercise. To explain what these actually do, let's go line-by-line.
 
 ---
 
 ## Line 1: Creating the handler object
 
-The vast bulk of the code is actually run all by the first line: `const alexa = Alexa.handler(event, context);`. `Alexa.handler` is a function (defined in `alexa.js`) that, using an event and context as parameters, returns an object of type `AlexaRequestEmitter`. This object extends the [EventEmitter class from the Node events module](https://nodejs.org/api/events.html). If you don't know already EventEmitters are very simple, and totally standard in Node. Here's (at a very basic level) how you use one:
+The vast bulk of the code is actually run all by the first line: `const alexa = Alexa.handler(event, context);`. `Alexa.handler` is a function (defined in `lib/alexa.js`) that returns an object of type `AlexaRequestEmitter`. This object extends the [EventEmitter class from the Node events module](https://nodejs.org/api/events.html). If you don't know already, EventEmitters are very simple, and totally standard in Node. Here's (at a very basic level) how you use one:
 
 ```javascript
 myEmitter.on('event', () => {
@@ -31,34 +35,40 @@ myEmitter.emit('event');
 
 `.on()` sets up a listener, which will just perform its particular function when the right 'eventName' is passed to the emitter via `.emit()`.
 
-We're going to set up a big EventEmitter can detect any of our 'Intents', then do a function. Simple.
+We're going to set up a big EventEmitter can detect any of our 'Intents', then do a function based off that intent. Simple.
 
-**NB:
-- In line 4, you can register several different intent handler objects, but they will all be registered in this same EventEmitter, in pretty much the same way. They are in no way separate, so events can be emitted from one 'handler' or 'state handler' to another.
-- The default max number of listeners per EventEmitter is 10. The SDK overrides this to 'Infinity'. This isn't great, but there's no other way to easily make an emitter of arbitrary size.
-- You may read in the EventEmitter documentation that by default, `this` in a listener-attached function refers to the EventEmitter object. The SDK chooses to override this, so that is not the case here. We'll get back to this later.**
+---
+
+*Before we move on, here are a few notes on this specific EventEmitter:*
+
+- If you've read the SDK docs, you know that you can register several different intent handler objects, but they will all be registered in this same big EventEmitter, in pretty much the same way. They are in no way separate, so events can be emitted from one 'handler' or 'state handler' to another.
+- You may read there's a default maximum number of listeners per EventEmitter. The SDK overrides this to 'Infinity'. This isn't great, but there's no good way to  make an emitter of arbitrary size.
+- You may read in the EventEmitter documentation that the `this` keyword in a listener-attached function refers to the EventEmitter object. The SDK chooses to override this, so that is not the case here. We'll get back to this later.
+
+---
 
 After the AlexaRequestEmitter (which is named `handler`) is declared, the function gives it a bunch of extra properties, which for the most part will be actually set later. The simple ones are:
 
-- \_event: event (from lambda parameters)
-- \_context: context (from lambda parameters)
-- \_callback: callback (from lambda parameters, if provided)
+- \_event: event -- *(the request object, formatted as described [here](https://developer.amazon.com/public/solutions/alexa/alexa-skills-kit/docs/alexa-skills-kit-interface-reference#request-format).)*
+- \_context: context -- *(the context object of the **Lambda function** (not to be confused with `event.context`).  Documented [here](http://docs.aws.amazon.com/lambda/latest/dg/nodejs-prog-model-context.html))*
+- \_callback: callback -- *(the callback specified by the Lambda function. This isn't used by the SDK at present)*
 - state: null
 - appId: null
 - response: {}
 - dynamoDBTableName: null
 - saveBeforeResponse: false
-- i18n: i18n (the 'i18next' module variable)
+- i18n: i18n -- *(the `i18next` module variable. It will be used for translation, and the SDK will set up the backend of this later.)*
 - locale: undefined
 - resources: undefined
 
-`event` is the request object, formatted as described [here](https://developer.amazon.com/public/solutions/alexa/alexa-skills-kit/docs/alexa-skills-kit-interface-reference#request-format).
+The `handler` function also gives its EventEmitter 2 more complex properties:
 
-`context` is the context object of the **Lambda function** (not to be confused with `event.context`) and is documented [here](http://docs.aws.amazon.com/lambda/latest/dg/nodejs-prog-model-context.html).
+- `registerHandlers`
+- `execute`
 
-`callback` is the callback specified by the Lambda function. This isn't used by the SDK, but hopefully will be soon.
+These are functions that call two global functions (`RegisterHandlers` and `HandleLambdaEvent`), but bind the `this` keyword of these functions to the AlexaRequestEmitter object. This means that whenever these functions use `this`, they refer to the AlexaRequestEmitter, not the function's global `this`.
 
-The `handler` function also gives its EventEmitter two more properties, which are two functions: `registerHandlers` and `execute`. These actually call two other functions `RegisterHandlers()` and `HandleLambdaEvent()`, but bind the `this` of these functions to the AlexaRequestEmitter object. This means that whenever these functions use `this`, they refer to the AlexaRequestEmitter, not the function's own `this`. We'll cover what `HandleLambdaEvent()` does when it's called later; however, it makes sense to cover RegisterHandlers now.
+We'll cover what `HandleLambdaEvent()` does when it's called later; however, it makes sense to cover `RegisterHandlers()` now.
 
 ### What does this RegisterHandlers/registerHandlers function do?
 
@@ -92,26 +102,26 @@ This function takes as arguments any number of objects - these are the handlers 
 
   Here's an example. If you request `this.attributes` in your listener callback, it's bound to `{handlerContext}.attributes`. This was initially taken from `{handler}._event.session.attributes`, so what is stored is part of the `_event` property. You'll remember that `_event` was set to be the request body itself when we set up that handler, so `this.attributes` (until you change it) gives the session attributes of the request.
 
----
+  ---
 
-**Summary: When you use `this` in your function, it actually refers to a handlerContext variable, which is set up to use the properties of the handler, and a few extra functions.**
+  **Summary of Handler Context: When you use `this` in your function, it actually refers to a `handlerContext` variable, which has the properties of the handler, and a few extra functions.**
 
----
+  ---
 
 #### What are those extra functions?
 
 - `emitWithState: EmitWithState.bind(this)` is a function that will append the current state to its first argument (whatever Intent you want to emit), then call `{handler}.emit.apply({handler}, arguments)`. This means it will just emit an intent to our EventEmitter with a state appended to it. This is used for movement 'between state handlers'. It's not *ever* used for emitting back to the Alexa Skill.
-- `t: localize` leads to some more complex 'this' binding. To cut a long story short, using `this.t()` in your handler functions will call `{handler}.i18n.t.apply({handler}.i18n, arguments)` - i.e. it will call the 'translate' (t) function of the handler's i18n property, and use the i18next object itself as the `this` keyword. We still have to set up the backend for the i18next, but this simply makes the translate usable from the listener callbacks.
+- `t: localize` leads to some more complex 'this' binding. To cut a long story short, using `this.t()` in your handler functions will call `{handler}.i18n.t.apply({handler}.i18n, arguments)`. What this means is that it will call the 'translate' function of the handler's i18n property, and use the `i18next` object itself as the `this` keyword. We still have to set up the backend for the i18next, but this simply makes translatation usable from the listener callbacks via `this.t()`.
 - `isOverridden: IsOverridden.bind(this, eventName)` is a function used by the SDK to detect whether you've overridden any of the default listeners that are going to be registered. I wouldn't recommend ever using it yourself, as it can't detect the 'overriding' listener from the 'overridden'; it simply returns true if the number of listeners for the given 'event name' is greater than 1. This is fine for the SDK's purposes.
-- `response: ResponseBuilder(this)` is an odd one. In its present form, I think it's totally useless. It's unmentioned in what little documentation there is, and isn't actually used by the SDK itself. But more importantly, it doesn't work:
+- `response: ResponseBuilder(this)` is an odd one. **In its present form, I think it's totally useless.** It's unmentioned in what little documentation there is, and isn't actually used by the SDK itself. But more importantly, it doesn't work:
 
-    - **Here's a quick explanation of what it does:** `ResponseBuilder` is a closure that you can access through `this.response`; this closure returns an object with functions that allow you to edit a `responseObject` variable that is private to the closure. This basically allows one to abstract the manual set-up of a response object, and store that in the `responseObject` variable. It's also chainable, as each of the object's functions returns `this`. So for example `this.response.speak("foo").listen("bar");`, creates a response object which is pretty much equivalent to the one sent by `this.emit(":ask", "foo", "bar");` - but instead of emitting that object, it stores that object in the responseObject variable.
+    - **Here's a quick explanation of what it's meant to do:** `ResponseBuilder` is a closure that you can access through `this.response`; this closure returns an object with functions that allow you to edit a `responseObject` variable that is private to the closure. This basically allows one to abstract the manual set-up of a response object, and store that in the `responseObject` variable. It's also chainable, as each of the object's functions returns `this`. So for example `this.response.speak("foo").listen("bar");`, creates a response object which is pretty much equivalent to the one sent by `this.emit(":ask", "foo", "bar");` - but instead of emitting that object, it stores that object in the responseObject variable.
 
-    - **Here's what I don't get:** The responseObject variable is private to the closure, so can't actually be retrieved without some significant edits/workarounds. It also doesn't mutate the actual `this.handler.response` object (even though responseObject is a copy of that object.) Therefore, this function seems useless. It can edit responseObject to make a functional response, but you can't then actually retrieve it... It's therefore just confusing at the moment, as beginners might think it's the same as `this.handler.response`.
+    - **Here's what I don't get:** The responseObject variable is private to the closure, so can't actually be retrieved without some significant edits/workarounds. It also doesn't mutate the actual `this.handler.response` object (even though `responseObject` is a copy of that object.) Therefore, this function seems useless. It can edit responseObject to make a functional response, but you can't then actually retrieve it... It's therefore just confusing at the moment, as beginners might think it's the same as `this.handler.response`.
 
     - **this.response would have one major use, which is audio player support.** If you wish to use the audio player, I would strongly suggest looking at [the AudioPlayer's specific documentation](https://developer.amazon.com/public/solutions/alexa/alexa-skills-kit/docs/custom-audioplayer-interface-reference), then reading the ResponseBuilder functions themselves, as they are fairly self-explanatory. You will however need to fix the ResponseBuilder function so this works.
 
-    - **Here's how I'd fix it:** Very simply, add a new getter property to the object that `ResponseBuilder` returns:
+    - **Here's how I'd fix it:** Very simply, add a new setter property to the object that `ResponseBuilder` returns:
       ```javascript
       'setResponse': function () {
         this.handler.response = responseObject
@@ -127,13 +137,15 @@ This function takes as arguments any number of objects - these are the handlers 
 
 ---
 
-**Summary of RegisterHandlers: Passed objects as parameters, this registers all the properties of all those objects as listeners in the handler object (which extends EventEmitter.) Those listeners are bound to a `handlerContext` variable.**
+**Summary of Register Handlers: When passed objects as parameters, this registers all the properties of all those objects as listeners in the handler object (which extends EventEmitter.) Those listeners are bound to a `handlerContext` variable.**
 
 ---
 
 ### Back to the `handler` object
 
-The neat part of the SDK, is that after it makes this object, the `alexa.handler` function then registers its own default set of listeners in the same way as you register yours - using the `registerHandlers()` function we just covered. This set of handlers can be found in `response.js`. They are the default API you interact with when making your conversation tree, and their event names are:
+The neat part of the SDK, is that after it makes this object, the `alexa.handler` function then registers its own default set of listeners in the same way as you register yours - using the `registerHandlers()` function we just covered. This default set of listeners can be found in `response.js`. They are the default API you interact with when making you want to send something to the Alexa Skill (using `this.emit('eventName', ...parameters)`). Notably, any of these handlers can be safely overridden, so feel free to write your own ':ask' or ':tell' if you want to. Their event names are:
+
+##### Usual listeners
 
 - ':tell'
 - ':ask'
@@ -141,21 +153,29 @@ The neat part of the SDK, is that after it makes this object, the `alexa.handler
 - ':tellWithCard'
 - ':tellWithLinkAccountCard'
 - ':askWithLinkAccountCard'
-
-
 - ':responseReady'
+
+##### Dialog-model-only listeners (covered in 'Dialog Models and the Alexa Skill Builder')
+
+- ':elicitSlot'
+- ':elicitSlotWithCard'
+- ':confirmSlot'
+- ':confirmSlotWithCard'
+- ':confirmIntent'
+- ':confirmIntentWithCard'
+
+##### DynamoDB listeners
+
 - ':saveState'
 - ':saveStateError'
 
-**Notably, any of these handlers can be safely overridden from index.js, so feel free to write your own ':ask' or ':tell' if you want to.**
-
-Fundamentally, what the first 6 of these do, is
+For now let's just talk about the **Usual Listeners**. Here's how they work:
 
 1. Build a well-structured response object from the parameters you give it.
 2. Set `this.handler.response` to this response.
-3. Emit ``':responseReady'``.
+3. Emit `':responseReady'`.
 
-Let's take a look at those in more detail:
+Let's take a look at those steps in more detail:
 
 1. In order to build a [response object](https://developer.amazon.com/public/solutions/alexa/alexa-skills-kit/docs/alexa-skills-kit-interface-reference#response-format) from the parameters, they all call the `buildSpeechletResponse()` function with the various parameters stored in an object. `this.attributes` is always used as one of these parameters, and is used to set the session attributes of the response.
 
@@ -163,9 +183,11 @@ Let's take a look at those in more detail:
 
     **NB: `buildSpeechletResponse()` automatically wraps speech in SSML tags, without checking for broken characters within. Therefore you must escape characters like `&` with a backslash.**
 
-2. The response is stored in `this.handler.response`. This should not be confused with `this.response` which is different. Notably, `this.handler.response` also contains `this.handler.response.response`, which is basically the subset of the response that will actually be spoken by Alexa.
+2. The response is stored in `this.handler.response`. This should not be confused with `this.response` (which you should ignore). Notably, `this.handler.response` also contains `this.handler.response.response`, which is basically the subset of the response that will actually be spoken by Alexa.
 
 3. The `'':responseReady'` listener doesn't do much except set the state in the session attributes of the response, emits `':saveState'` if you want to save the session attributes in DynamoDB, then calls `this.context.succeed(this.handler.response)`, which - assuming your Lambda function is using RequestResponse - sends off your event to the Alexa Skill.
+
+    ---
 
     **NB: While simple, the `:responseReady` listener has two big issues:**
 
@@ -180,13 +202,18 @@ Let's take a look at those in more detail:
         this.handler.response.sessionAttributes.STATE = "";
         ```
 
-    2. This isn't a bug, but technically `this.context.succeed` should no longer be used, as it's in the process of being deprecated. It would be better to use `callback`. A pull request has been submitted to fix this, but it's not been accepted quite yet.
+    2. This isn't a bug, but technically `this.context.succeed` should no longer be used, as it's in the process of being deprecated. It would be better to use `callback`. A pull request has been submitted to fix this, but it's not been accepted yet...
 
-Now that the SDK has registered it's default listeners, the first line is finally done.
+    ---
+
+Now that the SDK has registered its default listeners, the first line is finally done. It returns the `handler` object.
+
+
+**Summary of Line 1: Line 1 returns an EventEmitter, with a few extra properties attached. Crucially, this includes a `registerHandlers` function so you can easily add more listeners to it.**
 
 ---
 
-## Line 2 and 3: Some config
+## Lines 2 and 3: Some config
 
 `alexa.appId = appId;` and `alexa.resources = languageStrings;` just set the resource and appId properties of the `handler` to the necessary configuration values. We'll cover these when they are used in Line 5: `execute`.
 
@@ -194,7 +221,7 @@ Now that the SDK has registered it's default listeners, the first line is finall
 
 ## Line 4: Registering Handlers
 
-This registers your skill-specific listeners, in the `handler` object, following the method described above. A useful thing to note, is that not all of these listeners have to be events. If you're like me and you want to use them for abstraction, non-intent handlers can be useful. For example, I like register like a `':askHandler'` listener that automatically sets speech attributes (for repeating) and then emits ask:
+This registers your skill-specific listeners, in the `handler` object, following the method described above. A useful thing to note, is that not all of these listeners have to be events. If you're like me and you want to use them for abstraction, non-intent handlers can be useful. For example, I like to register a `':askHandler'` listener that automatically sets speech attributes (for repeating) and then emits ask:
 
 ```javascript
 ':askHandler': function(speechOutput, repromptSpeech) {
@@ -225,11 +252,14 @@ This line calls the `execute` property of the `handler` object we made earlier. 
 
 ---
 
-## DynamoDB Support and `:saveState`
+# DynamoDB Support and `:saveState`
 
-The SDK includes support for DynamoDB. To get a very basic intro to some DynamoDB terms, see [here](http://docs.aws.amazon.com/amazondynamodb/latest/gettingstartedguide/quick-intro.html). You'll also need to give your lambda function permission to access DynamoDB if you want to use this support.
+The SDK includes support for DynamoDB: an AWS NoSQL database service. To use DynamoDB:
 
-So how is DynamoDB integrated into the SDK? First, the SDK is only designed to retrieve and save attributes. If you want to do more than that, you'll need to do it yourself.
+- Add `alexa.dynamoDBTableName = "{Table Name}"` to your main code
+- Add full Dynamo DB permissions to the AWS IAM role that your Lambda function is using.
+
+So how is DynamoDB integrated into the SDK? First, the SDK is only designed **to retrieve and save attributes**. If you want to do more than that, you'll need to do it yourself. To get a very basic intro to some DynamoDB terms, see [here](http://docs.aws.amazon.com/amazondynamodb/latest/gettingstartedguide/quick-intro.html).
 
 ### Getting attributes
 
@@ -290,3 +320,13 @@ In the case of `':saveState'`, the `callback` used very simply does some error l
 ### DynamoDB Summary
 
 With the exception of the bugs, the SDK provides decent DynamoDB support. As they promise, pretty much the only condition to implement automatic attribute saving is to set `alexa.dynamoDBTableName`. However, `':saveState'` and the functions in `DynamoAttributesHelper.js` are pretty much only good for saving current attributes. If you want to do anything more complex, rewrite versions of these functions yourself using [aws-sdk](https://aws.amazon.com/sdk-for-node-js/).
+
+---
+
+# Dialog Models and the Alexa Skill Builder
+
+Well after I finished developing Room Finder, Amazon released a new 'dialog model' system. This system supposedly lets you fill an intent which has multiple slots "more easily and accurately". So say my estate agent skill wants to find out where a user wants to buy, what type of house they want, and what their budget is. Before dialog models, I'd have had three separate intents for this. The dialog model allows me to put all these slots in one 'BuyHouse' intent, but still retrieve them one by one from the user. I can then confirm each slot with the user (to check it's what they wanted to say) as I go. When every slot is filled, I can then confirm the overall intent. See [this blog post](https://developer.amazon.com/blogs/alexa/post/02d828b6-3144-46ea-9b4c-5ed2cbfadb9c/announcing-new-alexa-skill-builder-beta-a-tool-for-creating-skills) and the Alexa Skill Directive documentation for some more details.
+
+I have made a very simple demo of using dialog models and DynamoDB which you can find at [knowlsie/favourite-places-alexa-skill](https://github.com/knowlsie/favourite-places-alexa-skill), but I'm not going to explain dialog models in detail; it's more of a change to the Alexa Skill request interface than to the SDK. The only real change they make SDK-wise is to add a bunch more 'default listeners'. These are used to either 'elicit' an answer for a particular a slot, to 'confirm' a slot's value, or to 'delegate' this process to the Alexa Skill itself.
+
+**Room Finder is not at all compatible with dialog models or skill builder, as it uses AMAZON.YesIntent and AMAZON.NoIntent.**
