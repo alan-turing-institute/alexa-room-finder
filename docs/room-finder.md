@@ -14,7 +14,7 @@ Now some details that I think are poorly covered by documentation.
 
 #### Can I emit between different handlers and state handlers?
 
-Yes, you very much can. All the handlers are actually registered together in one big ['EventEmitter'](https://nodejs.org/api/events.html); to allow this without overlapping intent names, intents with states are actually listening for `IntentName_STATEAPPENDED`. When Lambda gets an intent from the Echo, the SDK just appends the state on to the intent before emitting it to the handler. The issue this means that if you write `this.emit('BookIntent')` within any of the state handlers, it will always just call the 'BookIntent' of the 'stateless' handlers. Therefore if you want to call the 'BookIntent' in \_CONFIRMMODE, you have to use `this.emitWithState('BookIntent')` with the correct `this.handler.state`.
+Yes, you very much can. All the handlers are actually registered together in one big ['EventEmitter'](https://nodejs.org/api/events.html), known from here on out as `handler`; to allow this without overlapping intent names, intents with states are actually listening for `IntentName_STATEAPPENDED`. When Lambda gets an intent from the Echo, the SDK just appends the state on to the intent before emitting it to the handler. The issue this means that if you write `this.emit('BookIntent')` within any of the state handlers, it will always just call the 'BookIntent' of the 'stateless' handlers. Therefore if you want to call the 'BookIntent' in \_CONFIRMMODE, you have to use `this.emitWithState('BookIntent')` with the correct `this.handler.state`.
 
 #### So how does emitWithState work?
 
@@ -46,7 +46,7 @@ attributes: this._event.session.attributes,
 context: this._context,
 name: eventName,
 isOverridden: IsOverridden.bind(this, eventName), //  Function that tells you whether there is more than one listener for a particular event string.
-response: ResponseBuilder(this) // Function that returns a function to generate responses.
+response: ResponseBuilder(this) // Function that returns a function to generate responses. Ignore.
 ```
 
 #### Why can't I reset the state to the default state, an empty string?
@@ -62,7 +62,7 @@ You only need to do this for the empty string.
 
 #### Can I emit two events at the same time?
 
-Provided you don't need them to happen synchronously, and they don't both send something to Alexa - yes.
+Provided you don't need them to happen synchronously, and they don't both send something to Alexa - yes, but I don't recommend doing it. The issue is that the current SDK uses `context.succeed()` rather than `callback()` when it's done. `callback` waits for the event loop to be empty, whereas `context.succeed()` doesn't. Therefore you can't guarantee that simultaneous asynchronous events will finish, if `context.succeed()` is called to early.
 
 # Room Finder
 
@@ -103,7 +103,7 @@ In order to make my code easier to read and debug, I made `nonIntentHandlers`, w
 
 - `:durationHandler` - takes a ISO-8601 duration parameter. Checks if this parameter is valid, and not over 2 hours, then stores the start time, end time and duration as attributes. It then emits `:getRoomHandler`...
 
-- `:getRoomHandler` - uses the attributes stored by `:durationHandler` to find a free room, then stores its credentials as attributes. It then emits `:roomFoundHandler`, passing the crendentials to it...
+- `:getRoomHandler` - uses the attributes stored by `:durationHandler` to find a free room, then stores its credentials as attributes. It then emits `:roomFoundHandler`, passing the credentials to it...
 
 - `:roomFoundHandler` - uses the passed credentials to check if a valid room was found, and if so changes the state to CONFIRMMODE and emits an appropriate `':ask'` event.
 
@@ -144,6 +144,6 @@ It does this by looping through the `parsedCals` object. For each calendar:
 
 #### `postRoom(token, ownerAddress, ownerName, startTime, endTime)`
 
-Passed a token, an address to make a calendar on, the name of that calendar, and the same start time and end time as passed eariler, this posts a room.
+Passed a token, an address to make a calendar on, the name of that calendar, and the same start time and end time as passed earler, this posts a room.
 
 It **does not directly write on the room resource calendar.** It instead posts an event on Alexa's calendar, and invites the room using the address provided. The benefit of this is that your account requires fewer permissions. The problem is it relies on the rooms accepting the invites.

@@ -5,8 +5,8 @@ This is intended to explain how the [Alexa Skills Kit SDK for Node.js](https://g
 As a framework for explaining the SDK, let's look top-down at how the SDK is actually used from your main `index.js` file. None of the back-end of these things is explained by the Amazon documentation, so that's the point of this exercise.
 
 ```javascript
-exports.handler = (event, context) => {
-  const alexa = Alexa.handler(event, context);
+exports.handler = (event, context, callback) => {
+  const alexa = Alexa.handler(event, context, callback);
   alexa.appId = appId;
   alexa.resources = languageStrings;
   alexa.registerHandlers(sessionHandlers)  
@@ -14,7 +14,7 @@ exports.handler = (event, context) => {
 };
 ```
 
-Note that `exports.handler = (event, context) => {}` is just for AWS lambda support. By default Lambda (when using Node) will run the exported `index.handler` on execution, with `event, context, callback` as parameters. Therefore, you can just imagine the contents of that arrow function as the 'main' code being run. To explain what  these 5 simple-looking lines actually do, let's go in line order.
+Note that `exports.handler = (event, context, callback) => {}` is just for AWS lambda support. By default Lambda (when using Node) will run the exported `index.handler` on execution, with `event, context, callback` as parameters. Including a callback is unnecessary right now, and unmentioned in the docs, but include it for future-proofing.  Overall, you can just imagine the contents of that arrow function as the 'main' code being run. To explain what these 5 simple lines actually do, let's go in line order.
 
 ---
 

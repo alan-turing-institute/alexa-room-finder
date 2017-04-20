@@ -87,7 +87,7 @@ In order to make a function in Lambda:
 
 * In order to deploy our code to Lambda we need to [create a 'deployment package' - basically a .zip file with all the necessary bits and bobs to run](http://docs.aws.amazon.com/lambda/latest/dg/nodejs-create-deployment-pkg.html).
 * First, you need to make some small edits to `lambda/config.js`. Change `const APP_ID = '{app-id}'` to the APP_ID found in the top left-hand corner of the Alexa console. Then change `const testNames = [...];` to an array of the names of rooms you'd like to find. These are just the names of the room calendars on your Office 365 instance, but **it's important that these names are exact as they're used to identify the right calendars.**
-* Then open a terminal, and in it navigate to the `lambda` directory. Run `npm install`, and it will install all the necessary modules for you within the lambda folder. If this doesn't work, the required packages are request, q, moment, and alexa-sdk.
+* Then open a terminal, and in it navigate to the `lambda` directory. Run `npm install`, and it will install all the necessary modules for you within the lambda folder. (If this doesn't work, the required packages are request, q, moment, and alexa-sdk.)
 * Then within the lambda folder, select `index.js`, `requesters.js`, `resources.js`, `config.js` and `node_modules`; right-click to compress them to a .zip file. **Do not compress the whole lambda folder from the root folder; that won't work.** It's fine if you accidentally compress `package.json` with the others though!
 * Upload your .zip file (or 'deployment package') to Lambda.
 
@@ -177,7 +177,7 @@ Provided you install lambda-local globally (`(sudo) npm install -g lambda-local`
 
 ## Testing with Mocha
 
-I've combined [mocha](https://mochajs.org/) and [lambda-local](https://www.npmjs.com/package/lambda-local) to create a practical testing package. In order to use it, first make sure you have the dev-dependencies of the overall repo installed - particularly `mocha` and `lambda-local`. Then just run `npm test` or `./node_modules/mocha/bin/mocha` from the root. You can just use `mocha` if you have mocha installed globally. By default, Mocha checks that the **exact** right response is returned. However, I've had some trouble integrating it with lambda-local, so it may not always report the error correctly; specifically in cases where Graph API requests are made, it returns timeouts, rather than detailing the wrong response.
+I've combined [mocha](https://mochajs.org/) and [lambda-local](https://www.npmjs.com/package/lambda-local) to create a practical testing package. In order to use it, first make sure you have the dev-dependencies of the overall repo installed - particularly `mocha` and `lambda-local`. Then just run `npm test` from the root. You can just use `mocha` if you have mocha installed globally. By default, Mocha checks that the **exact** right response is returned. However, it doesn't perfectly integrate with lambda-local, so it may not always report the error correctly; specifically in cases where Graph API requests are made, it returns timeouts, rather than detailing the wrong response.
 
 If you want to use my other mocha tests, you can change how testing is done by editing which tests are skipped. I only recommend using one of these files at a time.
 
