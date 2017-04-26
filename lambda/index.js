@@ -144,8 +144,8 @@ const confirmModeHandlers = Alexa.CreateStateHandler(states.CONFIRMMODE, {
   // Gives a different help message
   'AMAZON.HelpIntent': function HelpIntent() {
     this.emit(':askHandler',
-      this.t('BOOKING_HELP_MESSAGE', this.attributes.roomName),
-      this.t('BOOKING_HELP_REPROMPT', this.attributes.roomName));
+      this.t('BOOKING_HELP_MESSAGE', this.attributes.ownerName),
+      this.t('BOOKING_HELP_REPROMPT', this.attributes.ownerName));
   },
   // Repeats last messages
   'AMAZON.RepeatIntent': function RepeatIntent() {
@@ -199,12 +199,23 @@ const confirmModeHandlers = Alexa.CreateStateHandler(states.CONFIRMMODE, {
  */
 const nonIntentHandlers = {
   ':askHandler': function askHandler(speechOutput, repromptSpeech) {
-    this.attributes.speechOutput = speechOutput;
-    this.attributes.repromptSpeech = repromptSpeech;
+    if (speechOutput && repromptSpeech) {
+      this.attributes.speechOutput = speechOutput;
+      this.attributes.repromptSpeech = repromptSpeech;
+    } else if (speechOutput) {
+      this.attributes.speechOutput = speechOutput;
+      this.attributes.repromptSpeech = speechOutput;
+    } else {
+      this.emitWithState('Unhandled');
+    }
     this.emit(':ask', this.attributes.speechOutput, this.attributes.repromptSpeech);
   },
   ':repeatHandler': function repeatHandler() {
-    this.emit(':ask', this.attributes.speechOutput, this.attributes.repromptSpeech);
+    if (this.attributes.speechOutput && this.attributes.repromptSpeech) {
+      this.emit(':ask', this.attributes.speechOutput, this.attributes.repromptSpeech);
+    } else {
+      this.emitWithState('Unhandled');
+    }
   },
   ':durationHandler': function durationHandler(bookingDuration) {
     if (bookingDuration.asHours() > 2) {
@@ -260,8 +271,8 @@ const nonIntentHandlers = {
       this.handler.state = states.CONFIRMMODE;
 
       this.emit(':askHandler',
-        this.t('ROOM_AVAILABLE_MESSAGE', this.attributes.roomName),
-        this.t('ROOM_AVAILABLE_REPROMPT', this.attributes.roomName));
+        this.t('ROOM_AVAILABLE_MESSAGE', this.attributes.ownerName),
+        this.t('ROOM_AVAILABLE_REPROMPT', this.attributes.ownerName));
     } else {
       // Asks again if no rooms are available for the specified time.
       this.emit(':askHandler',
