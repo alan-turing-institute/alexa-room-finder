@@ -87,7 +87,7 @@ This means that there was quite specifically an error with a request to the Grap
 	  	}
 	    ```
 
-		If one of these doesn't work, it very could mean that something has changed on Microsoft's end, or with the [request](https://github.com/request/request) module. Try to find what's changed - you may need to replace the endpoint, or to update the exact parameters.
+		If one of these doesn't work, it very could mean that something has changed on Microsoft's end, or with the [request](https://github.com/request/request) package. Try to find what's changed - you may need to replace the endpoint, or to update the exact parameters.
 
 4. If the APIs and endpoints are all functional, then there's a new problem in the code, or the way the code is doing it. First follow the steps under 'Testing Lambda Locally', as this can probably get you a better stack trace, and a specific point where the code is breaking. We're specifically interested in the tests for BookIntent_CONFIRMMODE and DurationIntent_TIMEMODE, as they make the API requests.
 
@@ -240,7 +240,7 @@ Once you have a functional token, use it to make any API Requests you want to te
 
 See this section if you've worked out it's a problem with the code after checking the other sections. This obviously cannot explain how to solve bugs, but will give you my ideas of how to go about it.
 
-- First of all, definitely have a look through the other documentation I've provided. This can help to explain how the set-up has been done, how alexa-sdk module actually works, the alexa-sdk API, and how Room Finder itself actually works.
+- First of all, definitely have a look through the other documentation I've provided. This can help to explain how the set-up has been done, how alexa-sdk package actually works, the alexa-sdk API, and how Room Finder itself actually works.
 
 - Use lambda-local, or invoke the actual lambda function, as regularly as possible. Lambda-local gives fairly good error messages, means you don't have to zip and upload between tests, which massively speeds up the process. It also doesn't use up lambda requests, so is free. I suggest running `bash run_tests.sh` before every upload to lambda, just to check its all functional.
 
@@ -248,13 +248,17 @@ See this section if you've worked out it's a problem with the code after checkin
 
 - Errors are most likely to occur with the requesters. There are specific files to test/debug these in `test/requesters.js`.
 
-## Want to add/change rooms?
+## Want to add rooms?
 
 That's totally fine. Ideally on a mac, clone the [repo](https://github.com/alan-turing-institute/alexa-room-booker/) and then **add the names of the room calendars to the `testNames` array in `lambda/config.js`.**
 
 Then make sure you share the room calendar with alexa@turing.ac.uk, by following the instructions in the README under 'Calendar Sharing'
 
 Then look at the instructions in the README under 'Automating Lambda Function Creation and Configuration'. Follow the first step, to set up the AWS CLI for the Amazon Account we're using to host Lambda. Now, just make sure you've saved your new `lambda/config.js`, then run `bash update_lambda.sh` from the automation directory.
+
+## Want to change room names?
+
+You can actually change room names totally safely, and everything will keep working without any code changes at all, not even to the config. The only exception to this is if the calendar decides to unshare.
 
 ## Something Alexa says sounds dumb or unnatural?
 

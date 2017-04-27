@@ -94,7 +94,7 @@ In order to make a function in Lambda:
 
 * In order to deploy our code to Lambda we need to [create a 'deployment package' - basically a .zip file with all the necessary bits and bobs to run](http://docs.aws.amazon.com/lambda/latest/dg/nodejs-create-deployment-pkg.html).
 * First, you need to make some small edits to [lambda/config.js](./lambda/config.js). Change `const APP_ID = '{app-id}'` to the APP_ID found in the top left-hand corner of the Alexa console. Then change `const testNames = [...];` to an array of the names of rooms you'd like to find. These are just the names of the room calendars on your Office 365 instance, but **it's important that these names are exact as they're used to identify the right calendars.**
-* Then open a terminal, and in it navigate to the `lambda` directory. Run `npm install`, and it will install all the necessary modules for you within the lambda folder. (If this doesn't work, the required packages are request, q, moment, and alexa-sdk.)
+* Then open a terminal, and in it navigate to the `lambda` directory. Run `npm install`, and it will install all the necessary packages for you within the lambda folder. (If this doesn't work, the required packages are request, q, moment, and alexa-sdk.)
 * Then within the lambda folder, select everything in the folder, and right-click to compress them to a .zip file. **Do not compress the whole lambda folder from the root folder; that won't work.**
 * Upload your .zip file (or 'deployment package') to Lambda.
 
@@ -111,7 +111,7 @@ One of the goals of this project is to put as much of the set-up as possible in 
 
 2. Install the dev-dependencies for the overall skill with `npm install`. *(Note that these are different to the dependencies required for just the lambda function.)*
 
-3. In the `lambda` folder, also run `npm install` to install the necessary modules for just the lambda function.
+3. In the `lambda` folder, also run `npm install` to install the necessary packages for just the lambda function.
 
 4. Set the values in [lambda/config.js](./lambda/config.js). Change `const APP_ID = '{app-id}'` to the APP_ID found in the top left-hand corner of the Alexa console. Then change `const testNames = [...];` to an array of the names of rooms you'd like to find. These are just the names of the room calendars on your Office 365 instance, but **it's important that these names are exact as they're used to identify the right calendars.**
 
@@ -207,7 +207,7 @@ To test the skill online, go to the Test Section in the Alexa Skill Console, use
 
 # Further Docs
 
-[alexa-sdk](./docs/alexa-sdk.md) details how the alexa-sdk module works under the hood, at version 1.08. It covers pretty much everything, and goes into code-level detail. The level of detail means it will likely be useless after a few updates to the SDK, but I felt this was necessary. The reason is that the SDK is unintuitive, and has some pretty major issues that they don't plan to fix yet. If I go into code-level detail, I can detail the exact issues, where they occur, and how to fix them. This means you can choose to fix these issues if you need to.
+[alexa-sdk](./docs/alexa-sdk.md) details how the alexa-sdk package works under the hood, at version 1.08. It covers pretty much everything, and goes into code-level detail. The level of detail means it will likely be useless after a few updates to the SDK, but I felt this was necessary. The reason is that the SDK is unintuitive, and has some pretty major issues that they don't plan to fix yet. If I go into code-level detail, I can detail the exact issues, where they occur, and how to fix them. This means you can choose to fix these issues if you need to.
 
 [azure-ad-authentication](./docs/azure-ad-authentication.md) is an Azure how-to for Active Directory Authentication. It is intended for general use, not just for this Alexa Skill.
 

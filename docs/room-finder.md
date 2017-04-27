@@ -6,7 +6,7 @@ I'd like to think it's already a bit better commented and documented than the SD
 
 # The Alexa SDK API
 
-This brief section is intended to help you use the [alexa-sdk](https://github.com/alexa/alexa-skills-kit-sdk-for-nodejs) Node Module without understanding exactly what's up under the hood. First, do check out Amazon's basic [alexa-sdk documentation](https://github.com/alexa/alexa-skills-kit-sdk-for-nodejs/README.md). You will also likely need the context of the overall [Alexa Skills Kit documentation](https://developer.amazon.com/public/solutions/alexa/alexa-skills-kit/getting-started-guide). If you want to know how the SDK works under the hood check out [docs/alexa-sdk](./alexa-sdk).
+This brief section is intended to help you use the [alexa-sdk](https://github.com/alexa/alexa-skills-kit-sdk-for-nodejs) Node Package without understanding exactly what's up under the hood. First, do check out Amazon's basic [alexa-sdk documentation](https://github.com/alexa/alexa-skills-kit-sdk-for-nodejs/README.md). You will also likely need the context of the overall [Alexa Skills Kit documentation](https://developer.amazon.com/public/solutions/alexa/alexa-skills-kit/getting-started-guide). If you want to know how the SDK works under the hood check out [docs/alexa-sdk](./alexa-sdk).
 
 To just summarize their documentation, the Alexa SDK works on an 'listener' system, where it sets up a handler - which is basically just a Node [EventEmitter](https://nodejs.org/api/events.html) - that listens for particular events, then 'emits' other events in response. You set up the intents to listen for, and what to send back. The EventEmitter also has a preregistered set of listeners (`':tell'`, `':ask'`, `':askWithCard'`, `':tellWithCard'`, `':tellWithLinkAccountCard'`, `':askWithLinkAccountCard'`, `':responseReady'`, `':saveState'`, and `':saveStateError'`), which will push the parameters you send them to Alexa, and sort the rest of the response object for you. This whole process will only work in AWS Lambda.
 
@@ -115,7 +115,7 @@ In order to make my code easier to read and debug, I made `nonIntentHandlers`, w
 
 The [lambda/requesters.js](../lambda/requesters.js) file contains a set of functions that make requests to the Microsoft Graph API. The available functions are `getCalendars()`, `postRoom()`, and `findFreeRoom()`. All of these functions return [Q promises](https://github.com/kriskowal/q) - I still personally think Q is still better supported than ES6 promises, which is why I used it. This means the appropriate way to use them is `requesters.function(...).then((returned) => {...})`.
 
-All these functions also use the [request](https://github.com/request/request) module to make their API request.
+All these functions also use the [request](https://github.com/request/request) package to make their API request.
 
 #### `getCalendars(token)`
 
