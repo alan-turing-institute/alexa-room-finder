@@ -135,7 +135,7 @@ requesters.findFreeRoom = function findFreeRoom(token, startTime, endTime, names
   let calendarsUnavailable = 0;
 
   parsedCals.forEach((calendar) => {
-    if (names.indexOf(calendar.name) >= 0) {
+    if (names.indexOf(calendar.owner.name) >= 0) {
       const calViewUrl = `https://graph.microsoft.com/v1.0/Users/Me/Calendars/${calendar.id.toString()}/calendarView?startDateTime=${startTime}&endDateTime=${endTime}`;
 
       const toGet = {
@@ -155,7 +155,6 @@ requesters.findFreeRoom = function findFreeRoom(token, startTime, endTime, names
           deferred.resolve({
             ownerName: calendar.owner.name,
             ownerAddress: calendar.owner.address,
-            name: calendar.name,
           });
         } else {
           calendarsUnavailable += 1;

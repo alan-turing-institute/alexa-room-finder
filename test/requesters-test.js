@@ -43,7 +43,7 @@ describe.skip('Test requesters work', function() {
         return requesters.findFreeRoom(config.token,
           config.startTime,
           config.endTime,
-          [config.roomName],
+          [config.ownerName],
           parsedCals)
         .then((creds) => {
           promiseResult = creds;

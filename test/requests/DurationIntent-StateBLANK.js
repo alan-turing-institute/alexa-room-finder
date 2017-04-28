@@ -27,7 +27,7 @@ module.exports = {
       "slots": {
         "Duration": { // Duration Slot
           "name": "Duration",
-          "value": "PT1H",
+          "value": config.duration,
         },
       },
     },

@@ -126,7 +126,7 @@ Passed a token, this just returns an promise resolved to an object showing the c
 Passed a token, times formatted as values, the array of names of meeting rooms, and the object returned by getCalendars, this returns the a promise resolved to the key credentials of the first free room it finds.
 
 It does this by looping through the `parsedCals` object. For each calendar:
- - Check if its name is in `names`.
+ - Check if its (owner's) name is in `names`.
  - If it is in `names`, get its calendarView for the specified time.
  - Check if its calendarView is empty for the specified time.
  - If it is empty, return some 'credentials' in a JSON. startTime and endTime with findFreeRoom and postRoom, or this could result in errors.
@@ -135,7 +135,6 @@ It does this by looping through the `parsedCals` object. For each calendar:
     {
       ownerName: "string", // e.g. Meeting Room 1.0
       ownerAddress: "string", // e.g. meetingroom1.0@business.com
-      name: "string", // e.g. Meeting Room 1.0
     }
     ```
  - If all calendars either aren't in `names`, aren't `free`, or return errors, it returns a promise resolved to `false`.

@@ -27,10 +27,10 @@ const states = {
 function resetAttributes() {
   delete this.attributes.ownerAddress;
   delete this.attributes.ownerName;
-  delete this.attributes.roomName;
   delete this.attributes.startTime;
   delete this.attributes.endTime;
   delete this.attributes.duration;
+  delete this.attributes.durationInMinutes;
   delete this.attributes.speechOutput;
   delete this.attributes.repromptSpeech;
 }
@@ -176,9 +176,9 @@ const confirmModeHandlers = Alexa.CreateStateHandler(states.CONFIRMMODE, {
       this.attributes.endTime)
     .then(() => {
       this.emit(':tellWithCard',
-        this.t('ROOM_BOOKED', this.attributes.ownerName, this.attributes.duration),
+        this.t('ROOM_BOOKED', this.attributes.ownerName, this.attributes.durationInMinutes),
         this.t('CARD_ROOM_BOOKED_TITLE', this.attributes.ownerName),
-        this.t('CARD_ROOM_BOOKED_CONTENT', this.attributes.ownerName, this.attributes.duration));
+        this.t('CARD_ROOM_BOOKED_CONTENT', this.attributes.ownerName, this.attributes.durationInMinutes));
     }, (bookError) => {
       this.emit(':errorHandler', bookError);
     });
@@ -235,7 +235,8 @@ const nonIntentHandlers = {
       // Save dates in attributes as ISO strings, so they can be accessed to post event.
       this.attributes.startTime = startTime.toISOString();
       this.attributes.endTime = endTime.toISOString();
-      this.attributes.duration = bookingDuration.asMinutes();
+      this.attributes.duration = bookingDuration.toISOString();
+      this.attributes.durationInMinutes = Math.ceil(parseFloat(bookingDuration.asMinutes()));
 
       this.emit(':getRoomHandler');
     }
@@ -255,7 +256,6 @@ const nonIntentHandlers = {
         // Stores the owner of the room and room name as attributes, for later use when booking.
         this.attributes.ownerAddress = creds.ownerAddress;
         this.attributes.ownerName = creds.ownerName;
-        this.attributes.roomName = creds.name;
 
         this.emit(':roomFoundHandler', creds);
       }, (roomError) => {
@@ -276,8 +276,8 @@ const nonIntentHandlers = {
     } else {
       // Asks again if no rooms are available for the specified time.
       this.emit(':askHandler',
-        this.t('TIME_UNAVAILABLE_MESSAGE', Math.ceil(parseFloat(this.attributes.duration))),
-        this.t('TIME_UNAVAILABLE_REPROMPT', Math.ceil(parseFloat(this.attributes.duration))));
+        this.t('TIME_UNAVAILABLE_MESSAGE', this.attributes.durationInMinutes),
+        this.t('TIME_UNAVAILABLE_REPROMPT', this.attributes.durationInMinutes));
     }
   },
   ':startOverHandler': function startOverHandler() {

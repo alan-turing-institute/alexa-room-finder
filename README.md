@@ -169,11 +169,11 @@ module.exports = {
   token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJEb24ndCBkZWNvZGUgZXhhbXBsZSB0b2tlbnMuIiwiZXhwIjoxLCJuYW1lIjoia25vd2xzaWUiLCJhZG1pbiI6ZmFsc2V9.QhndPM-IJk1XcgntgXqXlI-9mmEesoRLKE1uLhrK5tg",
   startTime: startDateTime.toISOString(),
   endTime: endDateTime.toISOString(),
-  duration: durationInMinutes,
+  duration,
+  durationInMinutes,
   ownerAddress: "alexaroom1@business.com",
   //Usually the two below have the same value.
   ownerName: "Alexa Room 1",
-  roomName: "Alexa Room 1"
 }
 ```
 

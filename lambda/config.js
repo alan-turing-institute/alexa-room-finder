@@ -6,7 +6,7 @@
 const appId = '{app-id}';
 
 // Names of all meeting rooms to look for
-const testNames = ['Meeting Room 1.0', 'Meeting Room 1.4', 'Meeting Room 1.5', 'Meeting Room 1.6', 'Meeting Room 1.7'];
+const testNames = ['Florence Nightingale', 'Margaret Hamilton', 'David Blackwell', 'Jack Good', 'Ursula Franklin'];
 
 module.exports.appId = appId;
 module.exports.testNames = testNames;

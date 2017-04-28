@@ -22,8 +22,8 @@ module.exports = {
     "startTime": config.startTime,
     "endTime": config.endTime,
     "duration": config.duration,
+    "durationInMinutes": config.durationInMinutes,
     "ownerAddress": config.ownerAddress,
     "ownerName": config.ownerName,
-    "roomName": config.roomName
   }
 }

@@ -9,7 +9,7 @@ requesters.getCalendars(config.token)
     config.token,
     config.startTime,
     config.endTime,
-    [config.roomName],
+    [config.ownerName],
     parsedCals)
   .then((creds) => {
     console.info('Successful request: \n');
