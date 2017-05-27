@@ -169,10 +169,9 @@ module.exports = {
   token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJEb24ndCBkZWNvZGUgZXhhbXBsZSB0b2tlbnMuIiwiZXhwIjoxLCJuYW1lIjoia25vd2xzaWUiLCJhZG1pbiI6ZmFsc2V9.QhndPM-IJk1XcgntgXqXlI-9mmEesoRLKE1uLhrK5tg",
   startTime: startDateTime.toISOString(),
   endTime: endDateTime.toISOString(),
-  duration,
-  durationInMinutes,
+  duration: 'PT1H',
+  durationInMinutes: 60,
   ownerAddress: "alexaroom1@business.com",
-  //Usually the two below have the same value.
   ownerName: "Alexa Room 1",
 }
 ```
@@ -211,6 +210,6 @@ To test the skill online, go to the Test Section in the Alexa Skill Console, use
 
 [azure-ad-authentication](./docs/azure-ad-authentication.md) is an Azure how-to for Active Directory Authentication. It is intended for general use, not just for this Alexa Skill.
 
-[room-finder.md](./docs/room-finder.md) is a short explanation of the Room Finder app. It covers the Room Finder conversation tree, how the requests to the Graph API work, the extra event listeners I made, and the basics of alexa-sdk that [their documentation](https://github.com/alexa/alexa-skills-kit-sdk-for-nodejs) doesn't cover.
+[room-finder](./docs/room-finder.md) is a short explanation of the Room Finder app. It covers the Room Finder conversation tree, how the requests to the Graph API work, the extra event listeners I made, and the basics of alexa-sdk that [their documentation](https://github.com/alexa/alexa-skills-kit-sdk-for-nodejs) doesn't cover.
 
-[troubleshooting.md](./docs/troubleshooting.md) covers various troubleshooting things for the app. Read it if something breaks, or you want to add more rooms, and so on.
+[troubleshooting](./docs/troubleshooting.md) covers various troubleshooting things for the app. Read it if something breaks, or you want to add more rooms, and so on.

@@ -115,27 +115,9 @@ It goes through the properties of these handlers, and for each one, sets up a li
 - `emitWithState: EmitWithState.bind(this)` is a function that will append the current state to its first argument (whatever Intent you want to emit), then call `{handler}.emit.apply({handler}, arguments)`. This means it will just emit an intent to our EventEmitter with a state appended to it. This is used for movement 'between state handlers'. It's not *ever* used for emitting back to the Alexa Skill.
 - `t: localize` leads to some more complex 'this' binding. To cut a long story short, using `this.t()` in your handler functions will call `{handler}.i18n.t.apply({handler}.i18n, arguments)`. What this means is that it will call the 'translate' function of the handler's i18n property, and use the `i18next` object itself as the `this` keyword. We still have to set up the backend for the i18next, but this simply makes translatation usable from the listener callbacks via `this.t()`.
 - `isOverridden: IsOverridden.bind(this, eventName)` is a function used by the SDK to detect whether you've overridden any of the default listeners that are going to be registered. I wouldn't recommend ever using it yourself, as it can't detect the 'overriding' listener from the 'overridden'; it simply returns true if the number of listeners for the given 'event name' is greater than 1. This is fine for the SDK's purposes.
-- `response: ResponseBuilder(this)` is an odd one. **In its present form, I think it's totally useless.** It's unmentioned in what little documentation there is, and isn't actually used by the SDK itself. But more importantly, it doesn't work:
+- `response: ResponseBuilder(this)` is an odd one, as it's totally unused for the most part, but it's now in the main README, so go read that.
 
-    - **Here's a quick explanation of what it's meant to do:** `ResponseBuilder` is a closure that you can access through `this.response`; this closure returns an object with functions that allow you to edit a `responseObject` variable that is private to the closure. This basically allows one to abstract the manual set-up of a response object, and store that in the `responseObject` variable. It's also chainable, as each of the object's functions returns `this`. So for example `this.response.speak("foo").listen("bar");`, creates a response object which is pretty much equivalent to the one sent by `this.emit(":ask", "foo", "bar");` - but instead of emitting that object, it stores that object in the responseObject variable.
-
-    - **Here's what I don't get:** The responseObject variable is private to the closure, so can't actually be retrieved without some significant edits/workarounds. It also doesn't mutate the actual `this.handler.response` object (even though `responseObject` is a copy of that object.) Therefore, this function seems useless. It can edit responseObject to make a functional response, but you can't then actually retrieve it... It's therefore just confusing at the moment, as beginners might think it's the same as `this.handler.response`.
-
-    - **this.response would have one major use, which is audio player support.** If you wish to use the audio player, I would strongly suggest looking at [the AudioPlayer's specific documentation](https://developer.amazon.com/public/solutions/alexa/alexa-skills-kit/docs/custom-audioplayer-interface-reference), then reading the ResponseBuilder functions themselves, as they are fairly self-explanatory. You will however need to fix the ResponseBuilder function so this works.
-
-    - **Here's how I'd fix it:** Very simply, add a new setter property to the object that `ResponseBuilder` returns:
-      ```javascript
-      'setResponse': function () {
-        this.handler.response = responseObject
-      }
-      ```
-      Then you can do stuff like this:
-        ```javascript
-        this.response.speak('foo').listen('bar').setResponse();
-        this.emit(':responseReady');
-        ```
-
-      This basically allows you to bypass `this.emit(':ask')`, and set up your own response to emit to `':responseReady'`.
+    - **this.response has one major use, which is audio player support.** If you wish to use the audio player, I would strongly suggest looking at [the AudioPlayer's specific documentation](https://developer.amazon.com/public/solutions/alexa/alexa-skills-kit/docs/custom-audioplayer-interface-reference).
 
 ---
 
